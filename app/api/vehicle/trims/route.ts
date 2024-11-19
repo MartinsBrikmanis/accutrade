@@ -15,37 +15,28 @@ export async function GET(request: Request) {
     }
 
     const formattedMake = make.charAt(0).toUpperCase() + make.slice(1).toLowerCase()
-    const formattedModel = model.toLowerCase().replace(/\s+/g, '-')
 
     const apiKey = process.env.ACCU_TRADE_API_KEY
-    const url = `https://api.accu-trade.com/styles/${year}/${formattedMake}/${formattedModel}?apiKey=${apiKey}`
+    const url = `https://api.accu-trade.com/styles/${year}/${formattedMake}/${model}?apiKey=${apiKey}`
     
     console.log('Fetching trims from:', url)
 
-    const response = await fetch(url, {
-      headers: {
-        'Accept': 'application/json',
-      },
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('API Error Response:', errorText)
-      throw new Error(`API error: ${response.status}`)
-    }
-
+    const response = await fetch(url)
     const data = await response.json()
-    console.log('Raw trims data:', data)
+    
+    console.log('Raw API Response:', data)
 
-    let trimNames: string[] = []
-    if (Array.isArray(data)) {
-      trimNames = data.filter(trim => trim && typeof trim === 'string')
-    } else if (data && typeof data === 'object') {
-      trimNames = Object.values(data)
-        .filter(trim => trim && typeof trim === 'string')
-    }
+    const trimNames = Array.isArray(data) 
+      ? data.map(trim => {
+          if (typeof trim === 'string') return trim
+          if (typeof trim === 'object' && trim !== null) {
+            return trim.style || `${trim.webmodel || ''} ${trim.extendedGid || ''}`.trim()
+          }
+          return ''
+        }).filter(Boolean)
+      : []
 
-    console.log('Processed trims:', trimNames)
+    console.log('Processed trim names:', trimNames)
     return NextResponse.json(trimNames)
 
   } catch (error) {

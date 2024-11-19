@@ -89,26 +89,29 @@ export default function TradeInPage() {
     try {
       const makeLabel = vehicleMakes.find(m => m.value === selectedMake)?.label || selectedMake
       
+      // Log the request parameters for debugging
+      console.log('Fetching trims with:', { year: selectedYear, make: makeLabel, model })
+      
       const response = await fetch(
         `/api/vehicle/trims?year=${selectedYear}&make=${makeLabel}&model=${model}`
       )
       
       if (!response.ok) {
-        throw new Error('Failed to fetch trims')
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to fetch trims')
       }
       
       const data = await response.json()
-      console.log('Trims data received:', data)
+      console.log('Trims response:', data)
       
-      if (Array.isArray(data) && data.length > 0) {
-        setAvailableTrims(data)
-      } else {
-        console.error('No trims found:', data)
-        setAvailableTrims([])
+      // Simplified array handling
+      setAvailableTrims(Array.isArray(data) ? data : [])
+      
+      if (!data.length) {
         toast.error('No trims found for this model')
       }
     } catch (error) {
-      console.error('Error fetching trims:', error)
+      console.error('Error:', error)
       toast.error('Failed to fetch trims')
       setAvailableTrims([])
     }
