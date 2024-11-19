@@ -244,7 +244,7 @@ export default function TradeInPage() {
             onLanguageChange={(lang) => {/* handle language change */}}
           />
           <Card>
-            <CardHeader>
+            <CardHeader className="ml-[30px] mb-[30px]">
               <CardTitle>Vehicle Information</CardTitle>
               <CardDescription>
                 Enter your VIN or select your vehicle details manually.
@@ -363,45 +363,7 @@ export default function TradeInPage() {
         {vehicleData && (
           <div className="space-y-6">
             <Card>
-              <CardHeader>
-                <CardTitle>Vehicle Summary</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Year</p>
-                    <p className="font-medium">{vehicleData.year}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Make</p>
-                    <p className="font-medium">{vehicleData.make}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Model</p>
-                    <p className="font-medium">{vehicleData.model}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Trim</p>
-                    <p className="font-medium">{vehicleData.trim}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Trade-In Value</p>
-                    <p className="font-medium">
-                      ${vehicleData.tradeInValue.toLocaleString()}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Market Value</p>
-                    <p className="font-medium">
-                      ${vehicleData.marketValue.toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
+              <CardHeader className="ml-[30px] mb-[30px]">
                 <CardTitle>Raw API Response</CardTitle>
               </CardHeader>
               <CardContent>

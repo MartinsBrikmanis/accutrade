@@ -25,8 +25,8 @@ export function StepHeader({
     <div className="flex flex-col">
       <div className="flex items-center justify-between px-[30px] py-4">
         <Image
-          src="/asset/black-book-logo.png"
-          alt="Black Book"
+          src="/asset/accutrade-logo.png"
+          alt="Accutrade"
           width={143}
           height={24}
           className="h-6 w-auto"
@@ -38,7 +38,7 @@ export function StepHeader({
               onClick={() => onLanguageChange?.('en')}
               className={`py-[3px] px-[8px] rounded-full text-[12px] ${
                 currentLanguage === 'en'
-                  ? 'bg-[#8146F6] text-white'
+                  ? 'bg-[#4b69a0] text-white'
                   : 'bg-white text-black'
               }`}
             >
@@ -48,7 +48,7 @@ export function StepHeader({
               onClick={() => onLanguageChange?.('fr')}
               className={`py-[3px] px-[8px] rounded-full text-[12px] ${
                 currentLanguage === 'fr'
-                  ? 'bg-[#8146F6] text-white'
+                  ? 'bg-[#4b69a0] text-white'
                   : 'bg-white text-black'
               }`}
             >
