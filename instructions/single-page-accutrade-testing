@@ -22,7 +22,7 @@ This page allows users to evaluate the trade-in value of their vehicles by eithe
 - "Submit" button to fetch vehicle details using VIN
 - API Call:
   ```
-  GET http://api.accu-trade.com/vehicleByVIN/{VIN}?apiKey=[key]
+  GET https://api.accu-trade.com/vehicleByVIN/{VIN}?apiKey=[key]
   ```
 
 #### Option B: Manual Selection
@@ -34,16 +34,16 @@ This page allows users to evaluate the trade-in value of their vehicles by eithe
 - Fetch data step-by-step, updating the dropdowns dynamically based on the selection
 - API Calls:
   ```
-  GET http://api.accu-trade.com/years?apiKey=[key]
-  GET http://api.accu-trade.com/makes/byYear/{year}?apiKey=[key]
-  GET http://api.accu-trade.com/models/{year}/{make}?apiKey=[key]
-  GET http://api.accu-trade.com/styles/{year}/{make}/{model}?apiKey=[key]
+  GET https://api.accu-trade.com/years?apiKey=[key]
+  GET https://api.accu-trade.com/makes/byYear/{year}?apiKey=[key]
+  GET https://api.accu-trade.com/models/{year}/{make}?apiKey=[key]
+  GET https://api.accu-trade.com/styles/{year}/{make}/{model}?apiKey=[key]
   ```
 
 ### 2. Vehicle Data Display
 - Fetch detailed vehicle information based on GID
   ```
-  GET http://api.accu-trade.com/vehicle/{GID}?apiKey=[key]
+  GET https://api.accu-trade.com/vehicle/{GID}?apiKey=[key]
   ```
 - Display the following:
   1. **User-Friendly Summary**:

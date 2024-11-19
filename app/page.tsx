@@ -1,136 +1,362 @@
 "use client"
 
-import { Step1VehicleInfo, Step1Data } from "@/components/trade-in/Step1VehicleInfo"
-import { Step2VehicleSpecs, Step2Data } from "@/components/trade-in/Step2VehicleSpecs"
-import { Step3Financing, Step3Data } from "@/components/trade-in/Step3Financing"
-import { Step4Damage, Step4Data } from "@/components/trade-in/Step4Damage"
-import { Step5Additional, Step5Data } from "@/components/trade-in/Step5Additional"
-import { Step6Contact, Step6Data } from "@/components/trade-in/Step6Contact"
-import { ReportPage } from "@/components/trade-in/ReportPage"
-import { useState } from "react"
+import { useState } from 'react'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Separator } from '@/components/ui/separator'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { getVehicleByVin } from '@/lib/api'
+import { toast } from 'sonner'
+import { vehicleYears, vehicleMakes } from "@/app/assets/constants/vehicle-options"
+
+interface VehicleData {
+  year: string
+  make: string
+  model: string
+  trim: string
+  tradeInValue: number
+  marketValue: number
+  rawResponse: any
+}
 
 export default function TradeInPage() {
-  const [currentStep, setCurrentStep] = useState(1)
-  const [formData, setFormData] = useState<{
-    step1?: Step1Data
-    step2?: Step2Data
-    step3?: Step3Data
-    step4?: Step4Data
-    step5?: Step5Data
-    step6?: Step6Data
-  }>({})
+  const [inputMethod, setInputMethod] = useState<'vin' | 'manual'>('vin')
+  const [vin, setVin] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [vehicleData, setVehicleData] = useState<VehicleData | null>(null)
+  
+  // States for manual selection
+  const [selectedYear, setSelectedYear] = useState('')
+  const [selectedMake, setSelectedMake] = useState('')
+  const [selectedModel, setSelectedModel] = useState('')
+  const [selectedTrim, setSelectedTrim] = useState('')
 
-  const handleStep1Submit = (data: Step1Data) => {
-    setFormData(prev => ({ ...prev, step1: data }))
-    setCurrentStep(2)
+  // Add state for available options
+  const [availableModels, setAvailableModels] = useState<string[]>([])
+  const [availableTrims, setAvailableTrims] = useState<string[]>([])
+
+  // Handle make selection
+  const handleMakeSelect = async (make: string) => {
+    setSelectedMake(make)
+    setSelectedModel('')
+    setSelectedTrim('')
+    
+    try {
+      const makeLabel = vehicleMakes.find(m => m.value === make)?.label || make
+      
+      const response = await fetch(
+        `/api/vehicle/models?year=${selectedYear}&make=${makeLabel}`
+      )
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch models')
+      }
+      
+      const data = await response.json()
+      console.log('Models data received:', data)
+      
+      if (Array.isArray(data)) {
+        setAvailableModels(data)
+      } else {
+        console.error('Unexpected models data format:', data)
+        setAvailableModels([])
+      }
+    } catch (error) {
+      console.error('Error fetching models:', error)
+      toast.error('Failed to fetch models')
+      setAvailableModels([])
+    }
   }
 
-  const handleStep2Submit = (data: Step2Data) => {
-    setFormData(prev => ({ ...prev, step2: data }))
-    setCurrentStep(3)
+  // Handle model selection
+  const handleModelSelect = async (model: string) => {
+    setSelectedModel(model)
+    setSelectedTrim('')
+    
+    try {
+      const makeLabel = vehicleMakes.find(m => m.value === selectedMake)?.label || selectedMake
+      
+      const response = await fetch(
+        `/api/vehicle/trims?year=${selectedYear}&make=${makeLabel}&model=${model}`
+      )
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch trims')
+      }
+      
+      const data = await response.json()
+      console.log('Trims data received:', data)
+      
+      if (Array.isArray(data) && data.length > 0) {
+        setAvailableTrims(data)
+      } else {
+        console.error('No trims found:', data)
+        setAvailableTrims([])
+        toast.error('No trims found for this model')
+      }
+    } catch (error) {
+      console.error('Error fetching trims:', error)
+      toast.error('Failed to fetch trims')
+      setAvailableTrims([])
+    }
   }
 
-  const handleStep3Submit = (data: Step3Data) => {
-    setFormData(prev => ({ ...prev, step3: data }))
-    setCurrentStep(4)
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
 
-  const handleStep4Submit = (data: Step4Data) => {
-    setFormData(prev => ({ ...prev, step4: data }))
-    setCurrentStep(5)
-  }
+    try {
+      if (inputMethod === 'vin') {
+        // Validate VIN format
+        if (!/^[A-HJ-NPR-Z0-9]{17}$/i.test(vin)) {
+          toast.error('Please enter a valid 17-character VIN (alphanumeric characters only)')
+          setLoading(false)
+          return
+        }
 
-  const handleStep5Submit = (data: Step5Data) => {
-    setFormData(prev => ({ ...prev, step5: data }))
-    setCurrentStep(6)
-  }
+        const data = await getVehicleByVin(vin)
+        
+        setVehicleData({
+          year: data.year,
+          make: data.make,
+          model: data.model,
+          trim: data.trim,
+          tradeInValue: data.tradeInValue || 0,
+          marketValue: data.marketValue || 0,
+          rawResponse: data
+        })
+      } else {
+        // Validate manual selection
+        if (!selectedYear || !selectedMake || !selectedModel || !selectedTrim) {
+          toast.error('Please select all vehicle details')
+          return
+        }
 
-  const handleStep6Submit = async (data: Step6Data) => {
-    setFormData(prev => ({ ...prev, step6: data }))
-    // Here you would typically make an API call to get the estimate
-    // For now, we'll simulate it
-    setCurrentStep(7) // Show report
-  }
+        const response = await fetch('/api/vehicle/manual', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            year: selectedYear,
+            make: selectedMake,
+            model: selectedModel,
+            trim: selectedTrim,
+          }),
+        })
 
-  // Mock data for the report (replace with actual API response)
-  const mockEstimateData = {
-    vehicleData: {
-      year: formData.step1?.year || "",
-      make: formData.step1?.make || "",
-      model: formData.step1?.model || "",
-      trim: formData.step1?.trim || "",
-      condition: formData.step1?.condition || "",
-    },
-    estimatedValue: {
-      min: 57660,
-      max: 65695,
-      blackBookValue: 60000,
-      taxSavings: 7800,
-    },
+        if (!response.ok) {
+          throw new Error('Failed to fetch vehicle data')
+        }
+
+        const data = await response.json()
+        setVehicleData({
+          year: selectedYear,
+          make: selectedMake,
+          model: selectedModel,
+          trim: selectedTrim,
+          tradeInValue: data.tradeInValue || 0,
+          marketValue: data.marketValue || 0,
+          rawResponse: data,
+        })
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to fetch vehicle data')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {currentStep === 1 && (
-        <Step1VehicleInfo 
-          onNext={handleStep1Submit} 
-          initialData={formData.step1}
-          currentStep={currentStep}
-          totalSteps={6}
-        />
-      )}
-      {currentStep === 2 && (
-        <Step2VehicleSpecs 
-          onNext={handleStep2Submit} 
-          initialData={formData.step2}
-          vehicleInfo={formData.step1}
-          onBack={() => setCurrentStep(1)}
-          currentStep={currentStep}
-          totalSteps={6}
-        />
-      )}
-      {currentStep === 3 && (
-        <Step3Financing 
-          onNext={handleStep3Submit} 
-          initialData={formData.step3}
-          onBack={() => setCurrentStep(2)}
-          currentStep={currentStep}
-          totalSteps={6}
-        />
-      )}
-      {currentStep === 4 && (
-        <Step4Damage 
-          onNext={handleStep4Submit} 
-          initialData={formData.step4}
-          onBack={() => setCurrentStep(3)}
-          currentStep={currentStep}
-          totalSteps={6}
-        />
-      )}
-      {currentStep === 5 && (
-        <Step5Additional 
-          onNext={handleStep5Submit} 
-          initialData={formData.step5}
-          onBack={() => setCurrentStep(4)}
-          currentStep={currentStep}
-          totalSteps={6}
-        />
-      )}
-      {currentStep === 6 && (
-        <Step6Contact 
-          onNext={handleStep6Submit} 
-          initialData={formData.step6}
-          onBack={() => setCurrentStep(5)}
-          currentStep={currentStep}
-          totalSteps={6}
-        />
-      )}
-      {currentStep === 7 && (
-        <ReportPage
-          vehicleData={mockEstimateData.vehicleData}
-          estimatedValue={mockEstimateData.estimatedValue}
-        />
-      )}
-    </div>
+    <main className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="space-y-6">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold">Trade-In Evaluation Tool</h1>
+          <p className="text-muted-foreground mt-2">
+            Get the most accurate trade-in values for your vehicle.
+          </p>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Vehicle Information</CardTitle>
+            <CardDescription>
+              Enter your VIN or select your vehicle details manually.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex gap-4">
+                <Button
+                  variant={inputMethod === 'vin' ? 'default' : 'outline'}
+                  onClick={() => setInputMethod('vin')}
+                >
+                  Enter VIN
+                </Button>
+                <Button
+                  variant={inputMethod === 'manual' ? 'default' : 'outline'}
+                  onClick={() => setInputMethod('manual')}
+                >
+                  Manual Selection
+                </Button>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {inputMethod === 'vin' ? (
+                  <div className="space-y-2">
+                    <Input
+                      placeholder="Enter your VIN"
+                      value={vin}
+                      onChange={(e) => setVin(e.target.value)}
+                      maxLength={17}
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Your VIN is a 17-character alphanumeric code.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4">
+                    <Select value={selectedYear} onValueChange={setSelectedYear}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Year" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {vehicleYears.map((year) => (
+                          <SelectItem key={year} value={year}>
+                            {year}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select 
+                      value={selectedMake} 
+                      onValueChange={handleMakeSelect}
+                      disabled={!selectedYear}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Make" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {vehicleMakes.map((make) => (
+                          <SelectItem key={make.value} value={make.value}>
+                            {make.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select 
+                      value={selectedModel} 
+                      onValueChange={handleModelSelect}
+                      disabled={!selectedMake}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Model" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableModels.map((model) => (
+                          <SelectItem key={model} value={model}>
+                            {model}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select 
+                      value={selectedTrim} 
+                      onValueChange={setSelectedTrim}
+                      disabled={!selectedModel || availableTrims.length === 0}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Trim" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableTrims.map((trim) => (
+                          <SelectItem key={trim} value={trim}>
+                            {trim}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                <Button type="submit" disabled={loading} className="w-full">
+                  {loading ? 'Loading...' : 'Get Vehicle Value'}
+                </Button>
+              </form>
+            </div>
+          </CardContent>
+        </Card>
+
+        {vehicleData && (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Vehicle Summary</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Year</p>
+                    <p className="font-medium">{vehicleData.year}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Make</p>
+                    <p className="font-medium">{vehicleData.make}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Model</p>
+                    <p className="font-medium">{vehicleData.model}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Trim</p>
+                    <p className="font-medium">{vehicleData.trim}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Trade-In Value</p>
+                    <p className="font-medium">
+                      ${vehicleData.tradeInValue.toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Market Value</p>
+                    <p className="font-medium">
+                      ${vehicleData.marketValue.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Raw API Response</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <pre className="bg-muted p-4 rounded-lg overflow-auto max-h-96">
+                  {JSON.stringify(vehicleData.rawResponse, null, 2)}
+                </pre>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
+    </main>
   )
 } 
