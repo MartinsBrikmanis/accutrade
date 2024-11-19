@@ -1,0 +1,147 @@
+# Product Requirements Document (PRD)
+
+## Project Name: Trade-In Evaluation Page with Accu-Trade Integration
+
+## Overview
+
+This page allows users to evaluate the trade-in value of their vehicles by either entering a VIN or manually selecting the vehicle details (year, make, model, trim). The application fetches vehicle-specific data from the Accu-Trade API and displays both a user-friendly summary and the raw API response for transparency.
+
+## Goals
+
+1. Provide users with an easy way to determine the trade-in value of their vehicles
+2. Enable users to input vehicle details either by VIN or manually through dropdowns
+3. Display a clean interface with the fetched data presented in a user-friendly way and the raw API response visible for additional context
+4. Ensure API keys are securely stored in environment variables
+
+## Features
+
+### 1. Input Options
+
+#### Option A: VIN Input
+- Single input field for VIN
+- "Submit" button to fetch vehicle details using VIN
+- API Call:
+  ```
+  GET http://api.accu-trade.com/vehicleByVIN/{VIN}?apiKey=[key]
+  ```
+
+#### Option B: Manual Selection
+- Dropdowns to select:
+  1. Year
+  2. Make
+  3. Model
+  4. Trim (Style)
+- Fetch data step-by-step, updating the dropdowns dynamically based on the selection
+- API Calls:
+  ```
+  GET http://api.accu-trade.com/years?apiKey=[key]
+  GET http://api.accu-trade.com/makes/byYear/{year}?apiKey=[key]
+  GET http://api.accu-trade.com/models/{year}/{make}?apiKey=[key]
+  GET http://api.accu-trade.com/styles/{year}/{make}/{model}?apiKey=[key]
+  ```
+
+### 2. Vehicle Data Display
+- Fetch detailed vehicle information based on GID
+  ```
+  GET http://api.accu-trade.com/vehicle/{GID}?apiKey=[key]
+  ```
+- Display the following:
+  1. **User-Friendly Summary**:
+     - Year, Make, Model, Trim
+     - Trade-in Value
+     - Market Value
+  2. **Raw API Response** (JSON viewer or collapsible section)
+
+## Page Layout
+
+### 1. Header
+- Page title: "Trade-In Evaluation Tool"
+- Subtitle: "Get the most accurate trade-in values for your vehicle."
+
+### 2. Input Section
+- **VIN Input**:
+  - Input field: `Enter your VIN`
+  - Button: `Submit`
+  - Hint text: "Your VIN is a 17-character alphanumeric code."
+
+- **Manual Selection**:
+  - Dropdowns:
+    - Year: `Select Year`
+    - Make: `Select Make`
+    - Model: `Select Model`
+    - Trim (Style): `Select Trim`
+  - Button: `Submit`
+
+### 3. Results Section
+- **User-Friendly Vehicle Summary**:
+  ```
+  Year: [value]
+  Make: [value]
+  Model: [value]
+  Trim: [value]
+  Trade-In Value: $[value]
+  Market Value: $[value]
+  ```
+- **Raw API Response**:
+  - JSON viewer or collapsible raw data section showing the full API response
+
+## Technical Requirements
+
+### 1. API Integration
+- All API calls must use the Accu-Trade API with the API key securely stored in an environment variable (`.env.local`)
+  ```
+  ACCU_TRADE_API_KEY=<key>
+  ```
+- API requests should include error handling for:
+  - Invalid VIN
+  - Missing data for specific makes, models, or trims
+  - API rate limits or network failures
+
+### 2. Frontend
+- Framework: Next.js
+- Styling: Tailwind CSS
+- Components:
+  - Input fields and dropdowns
+  - Buttons with loading states
+  - JSON viewer for raw API response
+
+### 3. Backend/Environment
+- Ensure `.env.local` file is used to store sensitive keys
+- Avoid exposing API keys in client-side code
+- Create reusable API helper functions for:
+  - Fetching VIN-based vehicle data
+  - Fetching dropdown data (years, makes, models, trims)
+  - Fetching detailed vehicle data using GID
+
+### 4. Security
+- Use HTTPS for API calls
+- Validate VIN and dropdown inputs to prevent misuse
+
+## Development Steps
+
+1. **Environment Setup**
+   - Add `.env.local` to the project with `ACCU_TRADE_API_KEY`
+   - Create API helper functions for Accu-Trade requests
+
+2. **Frontend Development**
+   - Build the form UI with VIN input and dropdowns
+   - Add dynamic updates to dropdowns based on API responses
+   - Add a section to display vehicle data (user-friendly and raw)
+
+3. **API Integration**
+   - Connect the frontend with the API using helper functions
+   - Handle errors and edge cases
+
+4. **Testing**
+   - Test with real VINs and manual selections
+   - Ensure accurate rendering of both user-friendly and raw API responses
+
+5. **Deployment**
+   - Deploy on Vercel with the `.env.local` file properly configured
+
+## Deliverables
+
+- A fully functional trade-in evaluation page
+- Secure handling of the Accu-Trade API key
+- Accurate integration with the Accu-Trade API
+- Responsive UI showing both summarized and raw vehicle data
