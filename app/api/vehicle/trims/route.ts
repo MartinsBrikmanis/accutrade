@@ -26,18 +26,21 @@ export async function GET(request: Request) {
     
     console.log('Raw API Response:', data)
 
-    const trimNames = Array.isArray(data) 
+    const trimData = Array.isArray(data) 
       ? data.map(trim => {
-          if (typeof trim === 'string') return trim
+          if (typeof trim === 'string') return { trim, gid: '' }
           if (typeof trim === 'object' && trim !== null) {
-            return trim.style || `${trim.webmodel || ''} ${trim.extendedGid || ''}`.trim()
+            return {
+              trim: trim.style || `${trim.webmodel || ''} ${trim.extendedGid || ''}`.trim(),
+              gid: trim.gid || ''
+            }
           }
-          return ''
-        }).filter(Boolean)
+          return { trim: '', gid: '' }
+        }).filter(t => t.trim)
       : []
 
-    console.log('Processed trim names:', trimNames)
-    return NextResponse.json(trimNames)
+    console.log('Processed trim names:', trimData)
+    return NextResponse.json(trimData)
 
   } catch (error) {
     console.error('Error fetching trims:', error)

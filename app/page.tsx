@@ -30,6 +30,7 @@ interface VehicleData {
   tradeInValue: number
   marketValue: number
   rawResponse: any
+  gid?: string
 }
 
 export default function TradeInPage() {
@@ -43,10 +44,14 @@ export default function TradeInPage() {
   const [selectedMake, setSelectedMake] = useState('')
   const [selectedModel, setSelectedModel] = useState('')
   const [selectedTrim, setSelectedTrim] = useState('')
+  const [selectedGid, setSelectedGid] = useState<string>('')
 
   // Add state for available options
   const [availableModels, setAvailableModels] = useState<string[]>([])
-  const [availableTrims, setAvailableTrims] = useState<string[]>([])
+  const [availableTrims, setAvailableTrims] = useState<Array<{
+    trim: string,
+    gid: string
+  }>>([])
 
   // Handle make selection
   const handleMakeSelect = async (make: string) => {
@@ -85,12 +90,10 @@ export default function TradeInPage() {
   const handleModelSelect = async (model: string) => {
     setSelectedModel(model)
     setSelectedTrim('')
+    setSelectedGid('')
     
     try {
       const makeLabel = vehicleMakes.find(m => m.value === selectedMake)?.label || selectedMake
-      
-      // Log the request parameters for debugging
-      console.log('Fetching trims with:', { year: selectedYear, make: makeLabel, model })
       
       const response = await fetch(
         `/api/vehicle/trims?year=${selectedYear}&make=${makeLabel}&model=${model}`
@@ -102,9 +105,9 @@ export default function TradeInPage() {
       }
       
       const data = await response.json()
-      console.log('Trims response:', data)
+      console.log('Trims data received:', data) // Debug log
       
-      // Simplified array handling
+      // Update this to match the API response structure
       setAvailableTrims(Array.isArray(data) ? data : [])
       
       if (!data.length) {
@@ -114,6 +117,16 @@ export default function TradeInPage() {
       console.error('Error:', error)
       toast.error('Failed to fetch trims')
       setAvailableTrims([])
+    }
+  }
+
+  // Update the trim selection handler to match the data structure
+  const handleTrimSelect = (value: string) => {
+    const selectedTrimData = availableTrims.find(t => t.trim === value)
+    if (selectedTrimData) {
+      setSelectedTrim(selectedTrimData.trim)
+      setSelectedGid(selectedTrimData.gid)
+      console.log('Selected trim data:', selectedTrimData) // Debug log
     }
   }
 
@@ -148,18 +161,8 @@ export default function TradeInPage() {
           return
         }
 
-        const response = await fetch('/api/vehicle/manual', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            year: selectedYear,
-            make: selectedMake,
-            model: selectedModel,
-            trim: selectedTrim,
-          }),
-        })
+        // Use GID to fetch vehicle data
+        const response = await fetch(`/api/vehicle/gid/${selectedGid}`)
 
         if (!response.ok) {
           throw new Error('Failed to fetch vehicle data')
@@ -174,6 +177,7 @@ export default function TradeInPage() {
           tradeInValue: data.tradeInValue || 0,
           marketValue: data.marketValue || 0,
           rawResponse: data,
+          gid: selectedGid
         })
       }
     } catch (error) {
@@ -282,7 +286,7 @@ export default function TradeInPage() {
 
                     <Select 
                       value={selectedTrim} 
-                      onValueChange={setSelectedTrim}
+                      onValueChange={handleTrimSelect}
                       disabled={!selectedModel || availableTrims.length === 0}
                     >
                       <SelectTrigger>
@@ -290,8 +294,11 @@ export default function TradeInPage() {
                       </SelectTrigger>
                       <SelectContent>
                         {availableTrims.map((trim) => (
-                          <SelectItem key={trim} value={trim}>
-                            {trim}
+                          <SelectItem 
+                            key={trim.gid || trim.trim} 
+                            value={trim.trim}
+                          >
+                            {trim.trim}
                           </SelectItem>
                         ))}
                       </SelectContent>
