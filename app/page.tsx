@@ -34,6 +34,18 @@ interface VehicleData {
   gid?: string
 }
 
+// Modify the interface to better match the API response structure
+interface VinLookupResult {
+  gid: string
+  extendedGid: string
+  year: string
+  make: string
+  model: string
+  style: string
+  webmodel: string
+  isSelected: boolean
+}
+
 export default function TradeInPage() {
   const [inputMethod, setInputMethod] = useState<'vin' | 'manual'>('vin')
   const [vin, setVin] = useState('')
@@ -59,6 +71,9 @@ export default function TradeInPage() {
     value: string,
     label: string
   }>>([])
+
+  // Add new state near the top of the component with other states
+  const [vinLookupResult, setVinLookupResult] = useState<VinLookupResult | null>(null)
 
   // Handle make selection
   const handleMakeSelect = async (make: string) => {
@@ -182,14 +197,18 @@ export default function TradeInPage() {
         }
 
         const data = await getVehicleByVin(vin)
+        // Set the first item from the array as our lookup result
+        if (Array.isArray(data) && data.length > 0) {
+          setVinLookupResult(data[0])
+        }
         
         setVehicleData({
-          year: data.year,
-          make: data.make,
-          model: data.model,
-          trim: data.trim,
-          tradeInValue: data.tradeInValue || 0,
-          marketValue: data.marketValue || 0,
+          year: data[0].year,
+          make: data[0].make,
+          model: data[0].model,
+          trim: data[0].style,
+          tradeInValue: data[0].tradeInValue || 0,
+          marketValue: data[0].marketValue || 0,
           rawResponse: data
         })
       } else {
@@ -268,7 +287,7 @@ export default function TradeInPage() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  {inputMethod === 'vin' ? (
+                  {inputMethod === 'vin' && (
                     <div className="space-y-2">
                       <Input
                         placeholder="Enter your VIN"
@@ -279,8 +298,15 @@ export default function TradeInPage() {
                       <p className="text-sm text-muted-foreground">
                         Your VIN is a 17-character alphanumeric code.
                       </p>
+                      {vinLookupResult && (
+                        <h2 className="text-xl font-semibold mt-4">
+                          Select trim for your {vinLookupResult.year} {vinLookupResult.make} {vinLookupResult.model}
+                        </h2>
+                      )}
                     </div>
-                  ) : (
+                  )}
+
+                  {inputMethod === 'manual' && (
                     <div className="grid grid-cols-2 gap-4">
                       <Select value={selectedYear} onValueChange={handleYearSelect}>
                         <SelectTrigger>
