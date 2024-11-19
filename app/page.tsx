@@ -53,6 +53,12 @@ export default function TradeInPage() {
     gid: string
   }>>([])
 
+  // Add new state for available makes
+  const [availableMakes, setAvailableMakes] = useState<Array<{
+    value: string,
+    label: string
+  }>>([])
+
   // Handle make selection
   const handleMakeSelect = async (make: string) => {
     setSelectedMake(make)
@@ -127,6 +133,37 @@ export default function TradeInPage() {
       setSelectedTrim(selectedTrimData.trim)
       setSelectedGid(selectedTrimData.gid)
       console.log('Selected trim data:', selectedTrimData) // Debug log
+    }
+  }
+
+  // Add handler for year selection
+  const handleYearSelect = async (year: string) => {
+    setSelectedYear(year)
+    setSelectedMake('')
+    setSelectedModel('')
+    setSelectedTrim('')
+    setSelectedGid('')
+    
+    try {
+      const response = await fetch(`/api/vehicle/makes?year=${year}`)
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch makes')
+      }
+      
+      const data = await response.json()
+      console.log('Makes data received:', data)
+      
+      if (Array.isArray(data)) {
+        setAvailableMakes(data)
+      } else {
+        console.error('Unexpected makes data format:', data)
+        setAvailableMakes([])
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      toast.error('Failed to fetch makes')
+      setAvailableMakes([])
     }
   }
 
@@ -237,7 +274,7 @@ export default function TradeInPage() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-4">
-                    <Select value={selectedYear} onValueChange={setSelectedYear}>
+                    <Select value={selectedYear} onValueChange={handleYearSelect}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select Year" />
                       </SelectTrigger>
@@ -253,13 +290,13 @@ export default function TradeInPage() {
                     <Select 
                       value={selectedMake} 
                       onValueChange={handleMakeSelect}
-                      disabled={!selectedYear}
+                      disabled={!selectedYear || availableMakes.length === 0}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select Make" />
                       </SelectTrigger>
                       <SelectContent>
-                        {vehicleMakes.map((make) => (
+                        {availableMakes.map((make) => (
                           <SelectItem key={make.value} value={make.value}>
                             {make.label}
                           </SelectItem>
