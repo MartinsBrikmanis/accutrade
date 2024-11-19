@@ -1,6 +1,5 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
-import { StepHeader } from "@/components/trade-in/StepHeader"
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   showHeader?: boolean
@@ -14,7 +13,7 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ className, showHeader = true, onClose, onLanguageChange, currentLanguage, currentStep, totalSteps, onBack, hideCounter, ...props }, ref) => (
+  ({ className, ...props }, ref) => (
     <div className="mx-auto" style={{ width: '540px' }}>
       <div
         ref={ref}
@@ -24,17 +23,6 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
         )}
         {...props}
       >
-        {showHeader && (
-          <StepHeader
-            onClose={onClose}
-            onLanguageChange={onLanguageChange}
-            currentLanguage={currentLanguage}
-            currentStep={currentStep}
-            totalSteps={totalSteps}
-            onBack={onBack}
-            hideCounter={hideCounter}
-          />
-        )}
         {props.children}
       </div>
     </div>

@@ -21,6 +21,7 @@ import {
 import { getVehicleByVin } from '@/lib/api'
 import { toast } from 'sonner'
 import { vehicleYears, vehicleMakes } from "@/app/assets/constants/vehicle-options"
+import { StepHeader } from '@/components/trade-in/StepHeader'
 
 interface VehicleData {
   year: string
@@ -228,128 +229,136 @@ export default function TradeInPage() {
   return (
     <main className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="space-y-6">
-        <div className="text-center">
+        <div className="text-left pl-[20px] pb-[20px]">
           <h1 className="text-3xl font-bold">Trade-In Evaluation Tool</h1>
           <p className="text-muted-foreground mt-2">
             Get the most accurate trade-in values for your vehicle.
           </p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Vehicle Information</CardTitle>
-            <CardDescription>
-              Enter your VIN or select your vehicle details manually.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex gap-4">
-                <Button
-                  variant={inputMethod === 'vin' ? 'default' : 'outline'}
-                  onClick={() => setInputMethod('vin')}
-                >
-                  Enter VIN
-                </Button>
-                <Button
-                  variant={inputMethod === 'manual' ? 'default' : 'outline'}
-                  onClick={() => setInputMethod('manual')}
-                >
-                  Manual Selection
-                </Button>
+        {/* First Card with StepHeader */}
+        <div className="bg-[#F2F2F7] shadow-sm w-full mx-auto" style={{ width: '540px' }}>
+          <StepHeader 
+            hideCounter={true}
+            onClose={() => {/* handle close */}}
+            onLanguageChange={(lang) => {/* handle language change */}}
+          />
+          <Card>
+            <CardHeader>
+              <CardTitle>Vehicle Information</CardTitle>
+              <CardDescription>
+                Enter your VIN or select your vehicle details manually.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <Button
+                    variant={inputMethod === 'vin' ? 'default' : 'outline'}
+                    onClick={() => setInputMethod('vin')}
+                  >
+                    Enter VIN
+                  </Button>
+                  <Button
+                    variant={inputMethod === 'manual' ? 'default' : 'outline'}
+                    onClick={() => setInputMethod('manual')}
+                  >
+                    Manual Selection
+                  </Button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {inputMethod === 'vin' ? (
+                    <div className="space-y-2">
+                      <Input
+                        placeholder="Enter your VIN"
+                        value={vin}
+                        onChange={(e) => setVin(e.target.value)}
+                        maxLength={17}
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        Your VIN is a 17-character alphanumeric code.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-4">
+                      <Select value={selectedYear} onValueChange={handleYearSelect}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Year" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {vehicleYears.map((year) => (
+                            <SelectItem key={year} value={year}>
+                              {year}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      <Select 
+                        value={selectedMake} 
+                        onValueChange={handleMakeSelect}
+                        disabled={!selectedYear || availableMakes.length === 0}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Make" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableMakes.map((make) => (
+                            <SelectItem key={make.value} value={make.value}>
+                              {make.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      <Select 
+                        value={selectedModel} 
+                        onValueChange={handleModelSelect}
+                        disabled={!selectedMake}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Model" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableModels.map((model) => (
+                            <SelectItem key={model} value={model}>
+                              {model}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      <Select 
+                        value={selectedTrim} 
+                        onValueChange={handleTrimSelect}
+                        disabled={!selectedModel || availableTrims.length === 0}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Trim" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableTrims.map((trim) => (
+                            <SelectItem 
+                              key={trim.gid || trim.trim} 
+                              value={trim.trim}
+                            >
+                              {trim.trim}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  <Button type="submit" disabled={loading} className="w-full">
+                    {loading ? 'Loading...' : 'Get Vehicle Value'}
+                  </Button>
+                </form>
               </div>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {inputMethod === 'vin' ? (
-                  <div className="space-y-2">
-                    <Input
-                      placeholder="Enter your VIN"
-                      value={vin}
-                      onChange={(e) => setVin(e.target.value)}
-                      maxLength={17}
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      Your VIN is a 17-character alphanumeric code.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-4">
-                    <Select value={selectedYear} onValueChange={handleYearSelect}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select Year" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {vehicleYears.map((year) => (
-                          <SelectItem key={year} value={year}>
-                            {year}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <Select 
-                      value={selectedMake} 
-                      onValueChange={handleMakeSelect}
-                      disabled={!selectedYear || availableMakes.length === 0}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select Make" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableMakes.map((make) => (
-                          <SelectItem key={make.value} value={make.value}>
-                            {make.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <Select 
-                      value={selectedModel} 
-                      onValueChange={handleModelSelect}
-                      disabled={!selectedMake}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select Model" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableModels.map((model) => (
-                          <SelectItem key={model} value={model}>
-                            {model}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <Select 
-                      value={selectedTrim} 
-                      onValueChange={handleTrimSelect}
-                      disabled={!selectedModel || availableTrims.length === 0}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select Trim" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableTrims.map((trim) => (
-                          <SelectItem 
-                            key={trim.gid || trim.trim} 
-                            value={trim.trim}
-                          >
-                            {trim.trim}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
-                <Button type="submit" disabled={loading} className="w-full">
-                  {loading ? 'Loading...' : 'Get Vehicle Value'}
-                </Button>
-              </form>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
 
         {vehicleData && (
           <div className="space-y-6">
