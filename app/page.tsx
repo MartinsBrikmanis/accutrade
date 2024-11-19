@@ -75,6 +75,15 @@ export default function TradeInPage() {
   // Add new state near the top of the component with other states
   const [vinLookupResult, setVinLookupResult] = useState<VinLookupResult | null>(null)
 
+  // Add new state for available styles from VIN lookup
+  const [vinStyles, setVinStyles] = useState<Array<{
+    style: string,
+    gid: string
+  }>>([])
+
+  // Add state for selected style
+  const [selectedVinStyle, setSelectedVinStyle] = useState<string>('')
+
   // Handle make selection
   const handleMakeSelect = async (make: string) => {
     setSelectedMake(make)
@@ -200,6 +209,12 @@ export default function TradeInPage() {
         // Set the first item from the array as our lookup result
         if (Array.isArray(data) && data.length > 0) {
           setVinLookupResult(data[0])
+          // Extract styles from the response
+          const styles = data.map(item => ({
+            style: item.style,
+            gid: item.gid
+          }))
+          setVinStyles(styles)
         }
         
         setVehicleData({
@@ -299,9 +314,29 @@ export default function TradeInPage() {
                         Your VIN is a 17-character alphanumeric code.
                       </p>
                       {vinLookupResult && (
-                        <h2 className="text-xl font-semibold mt-4">
-                          Select trim for your {vinLookupResult.year} {vinLookupResult.make} {vinLookupResult.model}
-                        </h2>
+                        <>
+                          <h2 className="text-xl font-semibold mt-4">
+                            Select trim for your {vinLookupResult.year} {vinLookupResult.make} {vinLookupResult.model}
+                          </h2>
+                          <Select 
+                            value={selectedVinStyle}
+                            onValueChange={setSelectedVinStyle}
+                          >
+                            <SelectTrigger className="mt-2">
+                              <SelectValue placeholder="Select Style/Trim" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {vinStyles.map((style) => (
+                                <SelectItem 
+                                  key={style.gid} 
+                                  value={style.style}
+                                >
+                                  {style.style}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </>
                       )}
                     </div>
                   )}
@@ -378,7 +413,11 @@ export default function TradeInPage() {
                   )}
 
                   <Button type="submit" disabled={loading} className="w-full">
-                    {loading ? 'Loading...' : 'Get Vehicle Value'}
+                    {loading ? 'Loading...' : (
+                      inputMethod === 'vin' && !vinLookupResult 
+                        ? 'Find A Vehicle'
+                        : 'Get Vehicle Value'
+                    )}
                   </Button>
                 </form>
               </div>
