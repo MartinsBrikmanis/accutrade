@@ -26,6 +26,7 @@ export interface Step1Data {
   make: string
   model: string
   trim: string
+  mileage: string
   tradeInValue: number
   marketValue: number
   rawResponse: any
@@ -91,6 +92,7 @@ export function Step1VehicleInfo({
     make: "",
     model: "",
     trim: "",
+    mileage: "",
     tradeInValue: 0,
     marketValue: 0,
     rawResponse: null
@@ -192,6 +194,11 @@ export function Step1VehicleInfo({
     }
   }
 
+  // Helper function to check if style/trim is selected
+  const isTrimSelected = () => {
+    return inputMethod === 'vin' ? !!selectedVinStyle : !!selectedTrim
+  }
+
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -199,6 +206,13 @@ export function Step1VehicleInfo({
 
     try {
       let vehicleData: Step1Data
+
+      // Add mileage validation when trim is selected
+      if (isTrimSelected() && !formData.mileage) {
+        toast.error('Please enter vehicle mileage')
+        setLoading(false)
+        return
+      }
 
       if (inputMethod === 'vin') {
         if (!vinLookupResult) {
@@ -232,7 +246,6 @@ export function Step1VehicleInfo({
             return
           }
 
-          // Make the API call using the GID
           const response = await fetch(`/api/vehicle/gid/${selectedStyle.gid}`)
           if (!response.ok) {
             throw new Error('Failed to fetch vehicle data')
@@ -244,6 +257,7 @@ export function Step1VehicleInfo({
             make: vinLookupResult.make,
             model: vinLookupResult.model,
             trim: selectedVinStyle,
+            mileage: formData.mileage,
             tradeInValue: data.tradeInValue || 0,
             marketValue: data.marketValue || 0,
             rawResponse: data,
@@ -269,6 +283,7 @@ export function Step1VehicleInfo({
           make: selectedMake,
           model: selectedModel,
           trim: selectedTrim,
+          mileage: formData.mileage,
           tradeInValue: data.tradeInValue || 0,
           marketValue: data.marketValue || 0,
           rawResponse: data,
@@ -427,6 +442,20 @@ export function Step1VehicleInfo({
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+            )}
+
+            {/* Add Mileage Input when trim is selected */}
+            {isTrimSelected() && (
+              <div className="space-y-2">
+                <Label htmlFor="mileage" className="text-[16px]">Vehicle Mileage (KM)</Label>
+                <Input
+                  id="mileage"
+                  type="number"
+                  placeholder="Enter vehicle mileage"
+                  value={formData.mileage}
+                  onChange={(e) => setFormData(prev => ({ ...prev, mileage: e.target.value }))}
+                />
               </div>
             )}
 
