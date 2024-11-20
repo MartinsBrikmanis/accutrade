@@ -348,8 +348,9 @@ export function Step1VehicleInfo({
         await fetchMileageAdjustment(vehicleData.gid, vehicleData.mileage)
       }
 
+      // Update local form data but don't navigate
       setFormData(vehicleData)
-      onNext(vehicleData)
+      
     } catch (error) {
       console.error('Error:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to fetch vehicle data')
@@ -592,17 +593,20 @@ export function Step1VehicleInfo({
               </pre>
             </CardContent>
           </Card>
+
+          {/* Add new card at the bottom - Only show when we have API response */}
+          <Card className="border-t">
+            <CardContent className="px-[30px] py-4">
+              <Button 
+                className="w-full"
+                onClick={() => onNext(formData)}
+              >
+                Next
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       )}
-
-      {/* Add new card at the bottom */}
-      <Card className="mt-6 border-t">
-        <CardContent className="px-[30px] py-4">
-          <Button className="w-full">
-            Next
-          </Button>
-        </CardContent>
-      </Card>
     </Card>
   )
 } 
