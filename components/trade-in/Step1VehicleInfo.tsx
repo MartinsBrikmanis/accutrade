@@ -594,6 +594,15 @@ export function Step1VehicleInfo({
           </Card>
         </div>
       )}
+
+      {/* Add new card at the bottom */}
+      <Card className="mt-6 border-t">
+        <CardContent className="px-[30px] py-4">
+          <Button className="w-full">
+            Next
+          </Button>
+        </CardContent>
+      </Card>
     </Card>
   )
 } 
