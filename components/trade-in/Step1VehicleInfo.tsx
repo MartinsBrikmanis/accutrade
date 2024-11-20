@@ -9,6 +9,7 @@ import Image from "next/image"
 import { vehicleYears, vehicleMakes } from "@/app/assets/constants/vehicle-options"
 import { getVehicleByVin } from '@/lib/api'
 import { toast } from 'sonner'
+import { cn } from "@/lib/utils"
 
 interface Step1Props {
   onNext: (data: Step1Data) => void
@@ -43,6 +44,14 @@ interface VinLookupResult {
   style: string
   webmodel: string
   isSelected: boolean
+}
+
+// Add new interfaces for mileage adjustment
+interface MileageAdjustment {
+  adjustment: number
+  isDesirable: boolean
+  loading: boolean
+  error: string | null
 }
 
 export function Step1VehicleInfo({ 
@@ -97,6 +106,41 @@ export function Step1VehicleInfo({
     marketValue: 0,
     rawResponse: null
   })
+
+  // Add new state for mileage adjustment
+  const [mileageAdjustment, setMileageAdjustment] = useState<MileageAdjustment>({
+    adjustment: 0,
+    isDesirable: false,
+    loading: false,
+    error: null
+  })
+
+  // Add function to fetch mileage adjustment
+  const fetchMileageAdjustment = async (gid: string, mileage: string) => {
+    setMileageAdjustment(prev => ({ ...prev, loading: true, error: null }))
+    
+    try {
+      const response = await fetch(`/api/vehicle/${gid}/mileage/${mileage}`)
+      if (!response.ok) {
+        throw new Error('Failed to fetch mileage adjustment')
+      }
+      
+      const data = await response.json()
+      setMileageAdjustment({
+        adjustment: data.adjustment || 0,
+        isDesirable: data.isDesirable || false,
+        loading: false,
+        error: null
+      })
+    } catch (error) {
+      console.error('Error fetching mileage adjustment:', error)
+      setMileageAdjustment(prev => ({
+        ...prev,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch mileage adjustment'
+      }))
+    }
+  }
 
   // Handle make selection
   const handleMakeSelect = async (make: string) => {
@@ -205,7 +249,17 @@ export function Step1VehicleInfo({
     setLoading(true)
 
     try {
-      let vehicleData: Step1Data
+      // Declare vehicleData at the start
+      let vehicleData: Step1Data = {
+        year: "",
+        make: "",
+        model: "",
+        trim: "",
+        mileage: formData.mileage,
+        tradeInValue: 0,
+        marketValue: 0,
+        rawResponse: null
+      }
 
       // Add mileage validation when trim is selected
       if (isTrimSelected() && !formData.mileage) {
@@ -263,8 +317,6 @@ export function Step1VehicleInfo({
             rawResponse: data,
             gid: selectedStyle.gid
           }
-          setFormData(vehicleData)
-          onNext(vehicleData)
         }
       } else {
         if (!selectedYear || !selectedMake || !selectedModel || !selectedTrim) {
@@ -289,14 +341,68 @@ export function Step1VehicleInfo({
           rawResponse: data,
           gid: selectedGid
         }
-        setFormData(vehicleData)
       }
+
+      // After getting vehicle data, fetch mileage adjustment if we have both GID and mileage
+      if (vehicleData.gid && vehicleData.mileage) {
+        await fetchMileageAdjustment(vehicleData.gid, vehicleData.mileage)
+      }
+
+      setFormData(vehicleData)
+      onNext(vehicleData)
     } catch (error) {
       console.error('Error:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to fetch vehicle data')
     } finally {
       setLoading(false)
     }
+  }
+
+  // Add mileage adjustment display component
+  const MileageAdjustmentDisplay = () => {
+    if (mileageAdjustment.loading) {
+      return <div className="text-center">Loading mileage adjustment...</div>
+    }
+
+    if (mileageAdjustment.error) {
+      return <div className="text-red-500">{mileageAdjustment.error}</div>
+    }
+
+    if (mileageAdjustment.adjustment === 0) {
+      return null
+    }
+
+    return (
+      <div className="bg-muted p-4 rounded-lg">
+        <h3 className="text-lg font-semibold mb-2">Mileage Impact</h3>
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <span>Value Adjustment:</span>
+            <span className={cn(
+              "font-semibold",
+              mileageAdjustment.adjustment > 0 ? "text-green-600" : "text-red-600"
+            )}>
+              {new Intl.NumberFormat('en-CA', {
+                style: 'currency',
+                currency: 'CAD',
+                maximumFractionDigits: 0
+              }).format(mileageAdjustment.adjustment)}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span>Mileage Status:</span>
+            <span className={cn(
+              "text-sm px-2 py-1 rounded",
+              mileageAdjustment.isDesirable 
+                ? "bg-green-100 text-green-800" 
+                : "bg-red-100 text-red-800"
+            )}>
+              {mileageAdjustment.isDesirable ? "Below Average" : "Above Average"}
+            </span>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -470,9 +576,12 @@ export function Step1VehicleInfo({
         </div>
       </CardContent>
 
-      {/* Add API Response Card */}
+      {/* Add Mileage Adjustment Display */}
       {formData.rawResponse && (
-        <div className="mt-6">
+        <div className="mt-6 space-y-6">
+          <MileageAdjustmentDisplay />
+          
+          {/* Existing Raw API Response Card */}
           <Card>
             <CardHeader className="ml-[30px] mb-[30px]">
               <CardTitle>Raw API Response</CardTitle>
