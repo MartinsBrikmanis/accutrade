@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ChevronLeft, Pencil } from "lucide-react"
 import { Step1Data } from "./Step1VehicleInfo"
+import { StepHeader } from "./StepHeader"
 import { cn } from "@/lib/utils"
 
 interface Step2Props {
@@ -60,22 +61,13 @@ export function Step2VehicleSpecs({ onNext, initialData, vehicleInfo, currentSte
     onNext(formData)
   }
 
-  const handleEngineOptionChange = (checked: boolean, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      engineOptions: checked
-        ? [...prev.engineOptions, value]
-        : prev.engineOptions.filter(item => item !== value),
-    }))
-  }
-
   return (
-    <Card 
-      className="w-full mx-auto"
-      currentStep={currentStep}
-      totalSteps={totalSteps}
-      onBack={onBack}
-    >
+    <Card className="w-full mx-auto">
+      <StepHeader 
+        currentStep={currentStep}
+        totalSteps={totalSteps}
+        onBack={onBack}
+      />
       <CardHeader className="px-[30px] text-left">
         <CardTitle className="font-manrope text-[21px] font-extrabold text-black leading-normal">
           Your Vehicle
@@ -88,7 +80,7 @@ export function Step2VehicleSpecs({ onNext, initialData, vehicleInfo, currentSte
                   {vehicleInfo.year} {vehicleInfo.make} {vehicleInfo.model} {vehicleInfo.trim}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {vehicleInfo.mileage} KM • {vehicleInfo.condition} condition
+                  {vehicleInfo.mileage} KM
                 </p>
               </div>
             </div>
@@ -177,30 +169,6 @@ export function Step2VehicleSpecs({ onNext, initialData, vehicleInfo, currentSte
                 ))}
               </SelectContent>
             </Select>
-          </div>
-
-          {/* Engine Options */}
-          <div className="space-y-4">
-            <Label className="text-[16px]">Engine Options</Label>
-            <div className="space-y-3">
-              {ENGINE_OPTIONS.map((option) => (
-                <div key={option.id} className="flex items-center space-x-[8px]">
-                  <Checkbox
-                    id={option.id}
-                    checked={formData.engineOptions.includes(option.id)}
-                    onCheckedChange={(checked) => 
-                      handleEngineOptionChange(checked as boolean, option.id)
-                    }
-                  />
-                  <Label 
-                    htmlFor={option.id}
-                    className="text-[#372539] text-[16px] leading-[16px] cursor-pointer"
-                  >
-                    {option.label}
-                  </Label>
-                </div>
-              ))}
-            </div>
           </div>
 
           <div className="!mt-[30px]">
