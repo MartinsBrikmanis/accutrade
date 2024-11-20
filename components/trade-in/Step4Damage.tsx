@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
 import { ChevronLeft } from "lucide-react"
+import { StepHeader } from "./StepHeader"
 
 interface Step4Props {
   onNext: (data: Step4Data) => void
@@ -60,12 +61,12 @@ export function Step4Damage({ onNext, initialData, currentStep, totalSteps, onBa
   }
 
   return (
-    <Card 
-      className="w-full mx-auto"
-      currentStep={currentStep}
-      totalSteps={totalSteps}
-      onBack={onBack}
-    >
+    <Card className="w-full mx-auto">
+      <StepHeader 
+        currentStep={currentStep}
+        totalSteps={totalSteps}
+        onBack={onBack}
+      />
       <CardHeader className="px-[30px] text-left">
         <CardTitle className="font-manrope text-[21px] font-extrabold text-black leading-normal">
           Vehicle History

@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ChevronLeft } from "lucide-react"
+import { StepHeader } from "./StepHeader"
 
 interface Step6Props {
   onNext: (data: Step6Data) => void
@@ -92,12 +93,12 @@ export function Step6Contact({ onNext, initialData, currentStep, totalSteps, onB
   }
 
   return (
-    <Card 
-      className="w-full mx-auto"
-      currentStep={currentStep}
-      totalSteps={totalSteps}
-      onBack={onBack}
-    >
+    <Card className="w-full mx-auto">
+      <StepHeader 
+        currentStep={currentStep}
+        totalSteps={totalSteps}
+        onBack={onBack}
+      />
       <CardHeader className="px-[30px] text-left">
         <CardTitle className="font-manrope text-[21px] font-extrabold text-black leading-normal">
           Contact Information

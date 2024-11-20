@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { ChevronLeft } from "lucide-react"
+import { StepHeader } from "./StepHeader"
 
 interface Step3Props {
   onNext: (data: Step3Data) => void
@@ -34,12 +35,12 @@ export function Step3Financing({ onNext, initialData, currentStep, totalSteps, o
   }
 
   return (
-    <Card 
-      className="w-full mx-auto"
-      currentStep={currentStep}
-      totalSteps={totalSteps}
-      onBack={onBack}
-    >
+    <Card className="w-full mx-auto">
+      <StepHeader 
+        currentStep={currentStep}
+        totalSteps={totalSteps}
+        onBack={onBack}
+      />
       <CardHeader className="px-[30px] text-left">
         <CardTitle className="font-manrope text-[21px] font-extrabold text-black leading-normal">
           Financing Status

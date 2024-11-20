@@ -4,6 +4,7 @@ import { Separator } from "@/components/ui/separator"
 import { Info, CreditCard, AlertCircle } from "lucide-react"
 import { Label } from "@/components/ui/label"
 import Image from "next/image"
+import { StepHeader } from "./StepHeader"
 
 interface ReportPageProps {
   vehicleData: {
@@ -19,9 +20,18 @@ interface ReportPageProps {
     blackBookValue: number
     taxSavings: number
   }
+  currentStep?: number
+  totalSteps?: number
+  onBack?: () => void
 }
 
-export function ReportPage({ vehicleData, estimatedValue }: ReportPageProps) {
+export function ReportPage({ 
+  vehicleData, 
+  estimatedValue,
+  currentStep,
+  totalSteps,
+  onBack 
+}: ReportPageProps) {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-CA', {
       style: 'currency',
@@ -34,10 +44,13 @@ export function ReportPage({ vehicleData, estimatedValue }: ReportPageProps) {
 
   return (
     <div className="mx-auto" style={{ width: '540px' }}>
-      <Card 
-        className="w-full" 
-        hideCounter={true}
-      >
+      <Card className="w-full">
+        <StepHeader 
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+          onBack={onBack}
+          hideCounter={true}
+        />
         <CardHeader className="px-[30px] text-left">
           <CardTitle className="font-manrope text-[26px] font-extrabold text-black leading-normal text-left">
             Congratulations, Your Estimate Is Ready!

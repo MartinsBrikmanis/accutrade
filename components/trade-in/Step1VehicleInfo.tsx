@@ -10,6 +10,7 @@ import { vehicleYears, vehicleMakes } from "@/app/assets/constants/vehicle-optio
 import { getVehicleByVin } from '@/lib/api'
 import { toast } from 'sonner'
 import { cn } from "@/lib/utils"
+import { StepHeader } from "./StepHeader"
 
 interface Step1Props {
   onNext: (data: Step1Data) => void
@@ -407,15 +408,15 @@ export function Step1VehicleInfo({
   }
 
   return (
-    <Card 
-      className="w-full mx-auto"
-      onClose={onClose}
-      onLanguageChange={onLanguageChange}
-      currentLanguage={currentLanguage}
-      currentStep={currentStep}
-      totalSteps={totalSteps}
-      onBack={onBack}
-    >
+    <Card className="w-full mx-auto">
+      <StepHeader 
+        currentStep={currentStep}
+        totalSteps={totalSteps}
+        onBack={onBack}
+        onClose={onClose}
+        onLanguageChange={onLanguageChange}
+        currentLanguage={currentLanguage}
+      />
       <CardHeader className="px-[30px] text-left">
         <CardTitle className="font-manrope text-[21px] font-extrabold text-black leading-normal">
           Vehicle Information
