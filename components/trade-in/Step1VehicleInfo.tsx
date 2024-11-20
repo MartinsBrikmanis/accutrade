@@ -128,7 +128,7 @@ export function Step1VehicleInfo({
       const data = await response.json()
       setMileageAdjustment({
         adjustment: data.adjustment || 0,
-        isDesirable: data.isDesirable || false,
+        isDesirable: data.desirable || false,
         loading: false,
         error: null
       })
