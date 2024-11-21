@@ -24,38 +24,39 @@ export function StepHeader({
   return (
     <div className="flex flex-col">
       <div className="flex items-center justify-between px-[30px] py-4">
-        <Image
-          src="/asset/accutrade-logo.png"
-          alt="Accutrade"
-          width={143}
-          height={24}
-          className="h-6 w-auto"
-        />
-
-        <div className="flex items-center gap-2">
-          <div className="flex gap-1">
-            <button
+        <div className="relative h-[30px]">
+          <Image
+            src="/asset/accutrade-logo.png"
+            alt="AccuTrade Logo"
+            width={150}
+            height={30}
+            priority
+            style={{
+              height: '30px',
+              width: 'auto',
+              objectFit: 'contain'
+            }}
+          />
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className={`${currentLanguage === 'en' ? 'bg-primary text-white' : ''}`}
               onClick={() => onLanguageChange?.('en')}
-              className={`py-[3px] px-[8px] rounded-full text-[12px] ${
-                currentLanguage === 'en'
-                  ? 'bg-[#4b69a0] text-white'
-                  : 'bg-white text-black'
-              }`}
             >
               English
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className={`${currentLanguage === 'fr' ? 'bg-primary text-white' : ''}`}
               onClick={() => onLanguageChange?.('fr')}
-              className={`py-[3px] px-[8px] rounded-full text-[12px] ${
-                currentLanguage === 'fr'
-                  ? 'bg-[#4b69a0] text-white'
-                  : 'bg-white text-black'
-              }`}
             >
               Français
-            </button>
+            </Button>
           </div>
-
           <Button
             variant="ghost"
             size="icon"

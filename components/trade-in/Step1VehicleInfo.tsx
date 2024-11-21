@@ -300,10 +300,16 @@ export function Step1VehicleInfo({
 
       // Get vehicle value using the selected GID
       const response = await fetch(`/api/vehicle/gid/${gid}/value`)
+      const data = await response.json()
+      
       if (!response.ok) {
-        throw new Error('Failed to fetch vehicle value')
+        throw new Error(data.error || 'Failed to fetch vehicle value')
       }
-      const valueData = await response.json()
+
+      if (!data.tradeInValue && !data.marketValue) {
+        console.warn('No value data received:', data)
+        toast.warning('Vehicle value data may be incomplete')
+      }
 
       // Create vehicle data object with proper value mapping
       const vehicleData: Step1Data = {
@@ -312,11 +318,11 @@ export function Step1VehicleInfo({
         model: inputMethod === 'vin' ? vinLookupResult!.model : selectedModel,
         trim: inputMethod === 'vin' ? selectedVinStyle : selectedTrim,
         mileage: formData.mileage,
-        vehicleBasePrice: valueData.basePrice || valueData.tradeInValue || 0,
-        vehicleMarketValue: valueData.marketValue || 0,
+        vehicleBasePrice: data.tradeInValue || 0,
+        vehicleMarketValue: data.marketValue || 0,
         vehiclePriceAdjustment: 0,
         vehicleDesirability: false,
-        rawResponse: valueData,
+        rawResponse: data.rawResponse,
         gid: gid
       }
 
@@ -333,8 +339,8 @@ export function Step1VehicleInfo({
       onNext(vehicleData)
 
     } catch (error) {
-      console.error('Error:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to fetch vehicle data')
+      console.error('Error in handleSubmit:', error)
+      toast.error(error instanceof Error ? error.message : 'An unexpected error occurred')
     } finally {
       setLoading(false)
     }
