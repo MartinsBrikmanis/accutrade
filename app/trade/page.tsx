@@ -125,6 +125,12 @@ export default function TradePage() {
             currentStep={7}
             totalSteps={7}
             onBack={() => setCurrentStep(6)}
+            vehicleInfo={vehicleData || undefined}
+            vehicleSpecs={vehicleSpecs || undefined}
+            financingData={financingData || undefined}
+            damageData={damageData || undefined}
+            additionalData={additionalData || undefined}
+            contactData={contactData || undefined}
           />
         )}
       </div>
