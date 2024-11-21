@@ -9,7 +9,7 @@ export async function GET(
     const apiKey = process.env.ACCU_TRADE_API_KEY
 
     const response = await fetch(
-      `https://api.accu-trade.com/vehicle/${gid}/value?apiKey=${apiKey}`,
+      `https://api.accu-trade.com/vehicle/${gid}?apiKey=${apiKey}`,
       {
         headers: {
           'Accept': 'application/json',
@@ -22,7 +22,12 @@ export async function GET(
     }
 
     const data = await response.json()
-    return NextResponse.json(data)
+    return NextResponse.json({
+      tradeInValue: data.trade || 0,
+      marketValue: data.market || 0,
+      basePrice: data.vehicleBasePrice || data.trade || 0,
+      rawResponse: data
+    })
 
   } catch (error) {
     console.error('Error fetching vehicle value:', error)

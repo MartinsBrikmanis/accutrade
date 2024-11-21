@@ -305,14 +305,14 @@ export function Step1VehicleInfo({
       }
       const valueData = await response.json()
 
-      // Create vehicle data object
+      // Create vehicle data object with proper value mapping
       const vehicleData: Step1Data = {
         year: inputMethod === 'vin' ? vinLookupResult!.year : selectedYear,
         make: inputMethod === 'vin' ? vinLookupResult!.make : selectedMake,
         model: inputMethod === 'vin' ? vinLookupResult!.model : selectedModel,
         trim: inputMethod === 'vin' ? selectedVinStyle : selectedTrim,
         mileage: formData.mileage,
-        vehicleBasePrice: valueData.tradeInValue || 0,
+        vehicleBasePrice: valueData.basePrice || valueData.tradeInValue || 0,
         vehicleMarketValue: valueData.marketValue || 0,
         vehiclePriceAdjustment: 0,
         vehicleDesirability: false,

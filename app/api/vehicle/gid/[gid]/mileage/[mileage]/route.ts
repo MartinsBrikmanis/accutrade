@@ -9,7 +9,7 @@ export async function GET(
     const apiKey = process.env.ACCU_TRADE_API_KEY
 
     const response = await fetch(
-      `https://api.accu-trade.com/vehicle/${gid}/mileage/${mileage}?apiKey=${apiKey}`,
+      `https://api.accu-trade.com/vehicle/${gid}?apiKey=${apiKey}`,
       {
         headers: {
           'Accept': 'application/json',
@@ -22,7 +22,18 @@ export async function GET(
     }
 
     const data = await response.json()
-    return NextResponse.json(data)
+    
+    const baseMiles = data.basemiles || 0
+    const currentMiles = parseInt(mileage)
+    const isDesirable = currentMiles < baseMiles
+    const adjustment = isDesirable ? 750 : -750
+
+    return NextResponse.json({
+      adjustment: adjustment,
+      desirable: isDesirable,
+      baseMiles: baseMiles,
+      currentMiles: currentMiles
+    })
 
   } catch (error) {
     console.error('Error fetching mileage adjustment:', error)
