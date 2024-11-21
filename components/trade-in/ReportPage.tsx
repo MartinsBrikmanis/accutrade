@@ -58,9 +58,9 @@ const INTERIOR_COLORS = [
 
 const BUTTON_TEXT = "Get My Free Equifax Credit Score"
 const BUTTON_SUBTEXT = "This will NOT impact your Credit"
-const CREDIT_SCORE_TITLE = "Let&apos;s Check Your Credit Score"
-const CREDIT_SCORE_DESCRIPTION = "It&apos;s quick, easy, and won&apos;t affect your credit score"
-const CREDIT_SNAPSHOT_TEXT = "Obtain your Free Equifax Credit snapshot to determine your eligibility to financing the vehicle you&apos;ve been eyeing"
+const CREDIT_SCORE_TITLE = "Let's Check Your Credit Score"
+const CREDIT_SCORE_DESCRIPTION = "It's quick, easy, and won't affect your credit score"
+const CREDIT_SNAPSHOT_TEXT = "Obtain your Free Equifax Credit snapshot to determine your eligibility to financing the vehicle you've been eyeing"
 
 const MILEAGE_STATUS = {
   BELOW_AVERAGE: "Below Average",
@@ -158,7 +158,7 @@ export function ReportPage({
                     {formatCurrency(estimatedValue.blackBookValue)}
                   </p>
                   <p className="text-[16px] text-muted-foreground">
-                    Black Book® trade-in value
+                    Accu-Trade® trade-in value
                   </p>
                 </div>
               </div>
