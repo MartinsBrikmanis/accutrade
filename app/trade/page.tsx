@@ -117,8 +117,8 @@ export default function TradePage() {
               condition: "Good"
             }}
             estimatedValue={{
-              min: vehicleData.vehicleBasePrice * 0.9,
-              max: vehicleData.vehicleBasePrice * 1.1,
+              min: (vehicleData.vehicleBasePrice + vehicleData.vehiclePriceAdjustment) * 0.9,
+              max: vehicleData.vehicleBasePrice + vehicleData.vehiclePriceAdjustment,
               blackBookValue: vehicleData.vehicleBasePrice,
               taxSavings: vehicleData.vehicleBasePrice * 0.13
             }}
