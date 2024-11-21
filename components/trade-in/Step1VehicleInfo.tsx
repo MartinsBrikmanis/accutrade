@@ -29,8 +29,10 @@ export interface Step1Data {
   model: string
   trim: string
   mileage: string
-  tradeInValue: number
-  marketValue: number
+  vehicleBasePrice: number
+  vehicleMarketValue: number
+  vehiclePriceAdjustment: number
+  vehicleDesirability: boolean
   rawResponse: any
   gid?: string
 }
@@ -45,14 +47,6 @@ interface VinLookupResult {
   style: string
   webmodel: string
   isSelected: boolean
-}
-
-// Add new interfaces for mileage adjustment
-interface MileageAdjustment {
-  adjustment: number
-  isDesirable: boolean
-  loading: boolean
-  error: string | null
 }
 
 export function Step1VehicleInfo({ 
@@ -103,23 +97,15 @@ export function Step1VehicleInfo({
     model: "",
     trim: "",
     mileage: "",
-    tradeInValue: 0,
-    marketValue: 0,
+    vehicleBasePrice: 0,
+    vehicleMarketValue: 0,
+    vehiclePriceAdjustment: 0,
+    vehicleDesirability: false,
     rawResponse: null
-  })
-
-  // Add new state for mileage adjustment
-  const [mileageAdjustment, setMileageAdjustment] = useState<MileageAdjustment>({
-    adjustment: 0,
-    isDesirable: false,
-    loading: false,
-    error: null
   })
 
   // Add function to fetch mileage adjustment
   const fetchMileageAdjustment = async (gid: string, mileage: string) => {
-    setMileageAdjustment(prev => ({ ...prev, loading: true, error: null }))
-    
     try {
       const response = await fetch(`/api/vehicle/${gid}/mileage/${mileage}`)
       if (!response.ok) {
@@ -127,19 +113,14 @@ export function Step1VehicleInfo({
       }
       
       const data = await response.json()
-      setMileageAdjustment({
-        adjustment: data.adjustment || 0,
-        isDesirable: data.desirable || false,
-        loading: false,
-        error: null
-      })
+      setFormData(prev => ({
+        ...prev,
+        vehiclePriceAdjustment: data.adjustment || 0,
+        vehicleDesirability: data.desirable || false
+      }))
     } catch (error) {
       console.error('Error fetching mileage adjustment:', error)
-      setMileageAdjustment(prev => ({
-        ...prev,
-        loading: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch mileage adjustment'
-      }))
+      toast.error('Failed to fetch mileage adjustment')
     }
   }
 
@@ -257,8 +238,10 @@ export function Step1VehicleInfo({
         model: "",
         trim: "",
         mileage: formData.mileage,
-        tradeInValue: 0,
-        marketValue: 0,
+        vehicleBasePrice: 0,
+        vehicleMarketValue: 0,
+        vehiclePriceAdjustment: 0,
+        vehicleDesirability: false,
         rawResponse: null
       }
 
@@ -313,8 +296,10 @@ export function Step1VehicleInfo({
             model: vinLookupResult.model,
             trim: selectedVinStyle,
             mileage: formData.mileage,
-            tradeInValue: data.tradeInValue || 0,
-            marketValue: data.marketValue || 0,
+            vehicleBasePrice: data.tradeInValue || 0,
+            vehicleMarketValue: data.marketValue || 0,
+            vehiclePriceAdjustment: formData.vehiclePriceAdjustment,
+            vehicleDesirability: formData.vehicleDesirability,
             rawResponse: data,
             gid: selectedStyle.gid
           }
@@ -337,8 +322,10 @@ export function Step1VehicleInfo({
           model: selectedModel,
           trim: selectedTrim,
           mileage: formData.mileage,
-          tradeInValue: data.tradeInValue || 0,
-          marketValue: data.marketValue || 0,
+          vehicleBasePrice: data.tradeInValue || 0,
+          vehicleMarketValue: data.marketValue || 0,
+          vehiclePriceAdjustment: formData.vehiclePriceAdjustment,
+          vehicleDesirability: formData.vehicleDesirability,
           rawResponse: data,
           gid: selectedGid
         }
@@ -362,15 +349,7 @@ export function Step1VehicleInfo({
 
   // Add mileage adjustment display component
   const MileageAdjustmentDisplay = () => {
-    if (mileageAdjustment.loading) {
-      return <div className="text-center">Loading mileage adjustment...</div>
-    }
-
-    if (mileageAdjustment.error) {
-      return <div className="text-red-500">{mileageAdjustment.error}</div>
-    }
-
-    if (mileageAdjustment.adjustment === 0) {
+    if (!formData.vehiclePriceAdjustment) {
       return null
     }
 
@@ -382,24 +361,24 @@ export function Step1VehicleInfo({
             <span>Value Adjustment:</span>
             <span className={cn(
               "font-semibold",
-              mileageAdjustment.adjustment > 0 ? "text-green-600" : "text-red-600"
+              formData.vehiclePriceAdjustment > 0 ? "text-green-600" : "text-red-600"
             )}>
               {new Intl.NumberFormat('en-CA', {
                 style: 'currency',
                 currency: 'CAD',
                 maximumFractionDigits: 0
-              }).format(mileageAdjustment.adjustment)}
+              }).format(formData.vehiclePriceAdjustment)}
             </span>
           </div>
           <div className="flex items-center gap-2">
             <span>Mileage Status:</span>
             <span className={cn(
               "text-sm px-2 py-1 rounded",
-              mileageAdjustment.isDesirable 
+              formData.vehicleDesirability 
                 ? "bg-green-100 text-green-800" 
                 : "bg-red-100 text-red-800"
             )}>
-              {mileageAdjustment.isDesirable ? "Below Average" : "Above Average"}
+              {formData.vehicleDesirability ? "Below Average" : "Above Average"}
             </span>
           </div>
         </div>
@@ -562,7 +541,10 @@ export function Step1VehicleInfo({
                   type="number"
                   placeholder="Enter vehicle mileage"
                   value={formData.mileage}
-                  onChange={(e) => setFormData(prev => ({ ...prev, mileage: e.target.value }))}
+                  onChange={(e) => setFormData(prev => ({ 
+                    ...prev, 
+                    mileage: e.target.value 
+                  }))}
                 />
               </div>
             )}

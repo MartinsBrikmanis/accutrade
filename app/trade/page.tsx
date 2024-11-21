@@ -103,10 +103,10 @@ export default function TradePage() {
               condition: "Good"
             }}
             estimatedValue={{
-              min: vehicleData.tradeInValue * 0.9,
-              max: vehicleData.tradeInValue * 1.1,
-              blackBookValue: vehicleData.tradeInValue,
-              taxSavings: vehicleData.tradeInValue * 0.13
+              min: vehicleData.vehicleBasePrice * 0.9,
+              max: vehicleData.vehicleBasePrice * 1.1,
+              blackBookValue: vehicleData.vehicleBasePrice,
+              taxSavings: vehicleData.vehicleBasePrice * 0.13
             }}
             currentStep={7}
             totalSteps={7}

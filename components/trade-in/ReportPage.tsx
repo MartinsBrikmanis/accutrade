@@ -20,9 +20,9 @@ interface ReportPageProps {
     blackBookValue: number
     taxSavings: number
   }
-  currentStep?: number
-  totalSteps?: number
-  onBack?: () => void
+  currentStep: number
+  totalSteps: number
+  onBack: () => void
 }
 
 export function ReportPage({ 

@@ -61,6 +61,14 @@ export function Step2VehicleSpecs({ onNext, initialData, vehicleInfo, currentSte
     onNext(formData)
   }
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-CA', {
+      style: 'currency',
+      currency: 'CAD',
+      maximumFractionDigits: 0
+    }).format(amount)
+  }
+
   return (
     <Card className="w-full mx-auto">
       <StepHeader 
@@ -178,6 +186,84 @@ export function Step2VehicleSpecs({ onNext, initialData, vehicleInfo, currentSte
           </div>
         </form>
       </CardContent>
+
+      {/* Add new card at the bottom to display Step 1 data */}
+      {vehicleInfo && (
+        <Card className="mt-6 border-t">
+          <CardHeader className="px-[30px]">
+            <CardTitle className="text-[16px] font-semibold">Vehicle Information Summary</CardTitle>
+          </CardHeader>
+          <CardContent className="px-[30px] py-4">
+            <div className="space-y-4">
+              {/* Basic Vehicle Info */}
+              <div className="bg-muted p-4 rounded-lg">
+                <h3 className="font-semibold mb-2">Basic Details</h3>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Year:</span>
+                    <span className="ml-2 font-medium">{vehicleInfo.year}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Make:</span>
+                    <span className="ml-2 font-medium">{vehicleInfo.make}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Model:</span>
+                    <span className="ml-2 font-medium">{vehicleInfo.model}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Trim:</span>
+                    <span className="ml-2 font-medium">{vehicleInfo.trim}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Mileage:</span>
+                    <span className="ml-2 font-medium">{vehicleInfo.mileage} KM</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Valuation Info */}
+              <div className="bg-muted p-4 rounded-lg">
+                <h3 className="font-semibold mb-2">Valuation Details</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Base Price:</span>
+                    <span className="font-medium">
+                      {formatCurrency(vehicleInfo.vehicleBasePrice)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Market Value:</span>
+                    <span className="font-medium">
+                      {formatCurrency(vehicleInfo.vehicleMarketValue)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Mileage Adjustment:</span>
+                    <span className={cn(
+                      "font-medium",
+                      vehicleInfo.vehiclePriceAdjustment > 0 ? "text-green-600" : "text-red-600"
+                    )}>
+                      {formatCurrency(vehicleInfo.vehiclePriceAdjustment)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Mileage Status:</span>
+                    <span className={cn(
+                      "text-xs px-2 py-1 rounded",
+                      vehicleInfo.vehicleDesirability 
+                        ? "bg-green-100 text-green-800" 
+                        : "bg-red-100 text-red-800"
+                    )}>
+                      {vehicleInfo.vehicleDesirability ? "Below Average" : "Above Average"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </Card>
   )
 } 
