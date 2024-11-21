@@ -67,6 +67,8 @@ export default function TradePage() {
             currentStep={3}
             totalSteps={6}
             onBack={() => setCurrentStep(2)}
+            vehicleInfo={vehicleData || undefined}
+            vehicleSpecs={vehicleSpecs || undefined}
           />
         )}
         {currentStep === 4 && (
@@ -75,6 +77,9 @@ export default function TradePage() {
             currentStep={4}
             totalSteps={6}
             onBack={() => setCurrentStep(3)}
+            vehicleInfo={vehicleData || undefined}
+            vehicleSpecs={vehicleSpecs || undefined}
+            financingData={financingData || undefined}
           />
         )}
         {currentStep === 5 && (
@@ -83,6 +88,10 @@ export default function TradePage() {
             currentStep={5}
             totalSteps={6}
             onBack={() => setCurrentStep(4)}
+            vehicleInfo={vehicleData || undefined}
+            vehicleSpecs={vehicleSpecs || undefined}
+            financingData={financingData || undefined}
+            damageData={damageData || undefined}
           />
         )}
         {currentStep === 6 && (
@@ -91,6 +100,11 @@ export default function TradePage() {
             currentStep={6}
             totalSteps={6}
             onBack={() => setCurrentStep(5)}
+            vehicleInfo={vehicleData || undefined}
+            vehicleSpecs={vehicleSpecs || undefined}
+            financingData={financingData || undefined}
+            damageData={damageData || undefined}
+            additionalData={additionalData || undefined}
           />
         )}
         {currentStep === 7 && vehicleData && (
