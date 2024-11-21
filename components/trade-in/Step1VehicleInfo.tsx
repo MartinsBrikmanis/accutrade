@@ -231,35 +231,15 @@ export function Step1VehicleInfo({
     setLoading(true)
 
     try {
-      // Declare vehicleData at the start
-      let vehicleData: Step1Data = {
-        year: "",
-        make: "",
-        model: "",
-        trim: "",
-        mileage: formData.mileage,
-        vehicleBasePrice: 0,
-        vehicleMarketValue: 0,
-        vehiclePriceAdjustment: 0,
-        vehicleDesirability: false,
-        rawResponse: null
-      }
+      // First step: VIN lookup
+      if (inputMethod === 'vin' && !vinLookupResult) {
+        if (!/^[A-HJ-NPR-Z0-9]{17}$/i.test(vin)) {
+          toast.error('Please enter a valid 17-character VIN')
+          setLoading(false)
+          return
+        }
 
-      // Add mileage validation when trim is selected
-      if (isTrimSelected() && !formData.mileage) {
-        toast.error('Please enter vehicle mileage')
-        setLoading(false)
-        return
-      }
-
-      if (inputMethod === 'vin') {
-        if (!vinLookupResult) {
-          // First step: VIN lookup
-          if (!/^[A-HJ-NPR-Z0-9]{17}$/i.test(vin)) {
-            toast.error('Please enter a valid 17-character VIN (alphanumeric characters only)')
-            return
-          }
-
+        try {
           const data = await getVehicleByVin(vin)
           if (Array.isArray(data) && data.length > 0) {
             setVinLookupResult(data[0])
@@ -271,74 +251,87 @@ export function Step1VehicleInfo({
           } else {
             throw new Error('No vehicle data found for this VIN')
           }
-        } else {
-          // Second step: Get vehicle value using selected style's GID
-          if (!selectedVinStyle) {
-            toast.error('Please select a style/trim')
-            return
-          }
-
-          const selectedStyle = vinStyles.find(style => style.style === selectedVinStyle)
-          if (!selectedStyle) {
-            toast.error('Selected style not found')
-            return
-          }
-
-          const response = await fetch(`/api/vehicle/gid/${selectedStyle.gid}`)
-          if (!response.ok) {
-            throw new Error('Failed to fetch vehicle data')
-          }
-
-          const data = await response.json()
-          vehicleData = {
-            year: vinLookupResult.year,
-            make: vinLookupResult.make,
-            model: vinLookupResult.model,
-            trim: selectedVinStyle,
-            mileage: formData.mileage,
-            vehicleBasePrice: data.tradeInValue || 0,
-            vehicleMarketValue: data.marketValue || 0,
-            vehiclePriceAdjustment: formData.vehiclePriceAdjustment,
-            vehicleDesirability: formData.vehicleDesirability,
-            rawResponse: data,
-            gid: selectedStyle.gid
-          }
+        } catch (error) {
+          console.error('VIN lookup error:', error)
+          toast.error('Failed to find vehicle with this VIN')
         }
-      } else {
-        if (!selectedYear || !selectedMake || !selectedModel || !selectedTrim) {
-          toast.error('Please select all vehicle details')
+        setLoading(false)
+        return
+      }
+
+      // Second step: Get vehicle value
+      let gid: string
+      
+      if (inputMethod === 'vin') {
+        // VIN path validation
+        if (!selectedVinStyle) {
+          toast.error('Please select a trim level')
+          setLoading(false)
           return
         }
-
-        const response = await fetch(`/api/vehicle/gid/${selectedGid}`)
-        if (!response.ok) {
-          throw new Error('Failed to fetch vehicle data')
+        const selectedStyle = vinStyles.find(style => style.style === selectedVinStyle)
+        if (!selectedStyle) {
+          toast.error('Selected style not found')
+          setLoading(false)
+          return
         }
-
-        const data = await response.json()
-        vehicleData = {
-          year: selectedYear,
-          make: selectedMake,
-          model: selectedModel,
-          trim: selectedTrim,
-          mileage: formData.mileage,
-          vehicleBasePrice: data.tradeInValue || 0,
-          vehicleMarketValue: data.marketValue || 0,
-          vehiclePriceAdjustment: formData.vehiclePriceAdjustment,
-          vehicleDesirability: formData.vehicleDesirability,
-          rawResponse: data,
-          gid: selectedGid
+        gid = selectedStyle.gid
+      } else {
+        // Manual path validation
+        if (!selectedYear || !selectedMake || !selectedModel || !selectedTrim) {
+          toast.error('Please select all vehicle details')
+          setLoading(false)
+          return
         }
+        if (!selectedGid) {
+          toast.error('Vehicle trim GID not found')
+          setLoading(false)
+          return
+        }
+        gid = selectedGid
       }
 
-      // After getting vehicle data, fetch mileage adjustment if we have both GID and mileage
-      if (vehicleData.gid && vehicleData.mileage) {
-        await fetchMileageAdjustment(vehicleData.gid, vehicleData.mileage)
+      // Validate mileage
+      if (!formData.mileage) {
+        toast.error('Please enter vehicle mileage')
+        setLoading(false)
+        return
       }
 
-      // Update local form data but don't navigate
+      // Get vehicle value using the selected GID
+      const response = await fetch(`/api/vehicle/gid/${gid}/value`)
+      if (!response.ok) {
+        throw new Error('Failed to fetch vehicle value')
+      }
+      const valueData = await response.json()
+
+      // Create vehicle data object
+      const vehicleData: Step1Data = {
+        year: inputMethod === 'vin' ? vinLookupResult!.year : selectedYear,
+        make: inputMethod === 'vin' ? vinLookupResult!.make : selectedMake,
+        model: inputMethod === 'vin' ? vinLookupResult!.model : selectedModel,
+        trim: inputMethod === 'vin' ? selectedVinStyle : selectedTrim,
+        mileage: formData.mileage,
+        vehicleBasePrice: valueData.tradeInValue || 0,
+        vehicleMarketValue: valueData.marketValue || 0,
+        vehiclePriceAdjustment: 0,
+        vehicleDesirability: false,
+        rawResponse: valueData,
+        gid: gid
+      }
+
+      // Get mileage adjustment
+      const mileageResponse = await fetch(`/api/vehicle/gid/${gid}/mileage/${formData.mileage}`)
+      if (mileageResponse.ok) {
+        const mileageData = await mileageResponse.json()
+        vehicleData.vehiclePriceAdjustment = mileageData.adjustment || 0
+        vehicleData.vehicleDesirability = mileageData.desirable || false
+      }
+
+      // Update form data
       setFormData(vehicleData)
-      
+      onNext(vehicleData)
+
     } catch (error) {
       console.error('Error:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to fetch vehicle data')
