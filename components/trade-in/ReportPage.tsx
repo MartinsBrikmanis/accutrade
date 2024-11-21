@@ -179,7 +179,7 @@ export function ReportPage({
                 Obtain your Free Equifax Credit snapshot to determine your eligibility to financing the vehicle you've been eyeing
               </p>
               
-              <Button className="w-full h-auto py-4 bg-[#8146F6] hover:bg-[#8146F6]/90 text-[16px]">
+              <Button className="w-full h-auto py-4 bg-[#4b69a0] hover:bg-[#4b69a0]/90 text-[16px]">
                 Get My Free Equifax Credit Score
               </Button>
 

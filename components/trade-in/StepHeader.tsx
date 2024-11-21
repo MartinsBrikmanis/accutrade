@@ -39,6 +39,7 @@ export function StepHeader({
           />
         </div>
         <div className="flex items-center gap-4">
+          {/* Language selection buttons commented out
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -57,6 +58,7 @@ export function StepHeader({
               Français
             </Button>
           </div>
+          */}
           <Button
             variant="ghost"
             size="icon"
