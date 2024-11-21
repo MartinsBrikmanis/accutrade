@@ -435,7 +435,10 @@ export function Step1VehicleInfo({
                 {vinLookupResult && (
                   <>
                     <h2 className="text-xl font-semibold mt-4">
-                      Select trim for your {vinLookupResult.year} {vinLookupResult.make} {vinLookupResult.model}
+                      Select trim for your{" "}
+                      <span className="text-[#4b69a0]">
+                        {vinLookupResult.year} {vinLookupResult.make} {vinLookupResult.model}
+                      </span>
                     </h2>
                     <Select 
                       value={selectedVinStyle}
