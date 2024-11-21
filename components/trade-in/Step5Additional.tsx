@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
-import { ChevronLeft } from "lucide-react"
 import { StepHeader } from "./StepHeader"
 import { Step1Data } from "./Step1VehicleInfo"
 import { Step2Data } from "./Step2VehicleSpecs"
@@ -50,6 +49,9 @@ const INTERIOR_COLORS = [
   { id: "ceramic", label: "Ceramic", color: "#E5E4E2" },
   { id: "navy-pier", label: "Navy Pier", color: "#2B3C5B" },
 ]
+
+const SECTION_TITLE = "Let&apos;s Talk About Additional Features"
+const SECTION_DESCRIPTION = "Tell us about your vehicle&apos;s additional features"
 
 export function Step5Additional({ 
   onNext, 
@@ -110,10 +112,10 @@ export function Step5Additional({
       />
       <CardHeader className="px-[30px] text-left">
         <CardTitle className="font-manrope text-[21px] font-extrabold text-black leading-normal">
-          Additional Details
+          {SECTION_TITLE}
         </CardTitle>
         <p className="text-black text-[16px] font-normal leading-[120%]">
-          Tell us more about your vehicle's features
+          {SECTION_DESCRIPTION}
         </p>
       </CardHeader>
       <CardContent className="px-[30px] py-6">

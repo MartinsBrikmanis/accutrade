@@ -4,8 +4,6 @@ import { Button } from "@/components/ui/button"
 
 interface StepHeaderProps {
   onClose?: () => void
-  onLanguageChange?: (lang: 'en' | 'fr') => void
-  currentLanguage?: 'en' | 'fr'
   currentStep?: number
   totalSteps?: number
   onBack?: () => void
@@ -14,8 +12,6 @@ interface StepHeaderProps {
 
 export function StepHeader({ 
   onClose, 
-  onLanguageChange, 
-  currentLanguage = 'en',
   currentStep = 1,
   totalSteps = 6,
   onBack,
@@ -39,26 +35,6 @@ export function StepHeader({
           />
         </div>
         <div className="flex items-center gap-4">
-          {/* Language selection buttons commented out
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className={`${currentLanguage === 'en' ? 'bg-primary text-white' : ''}`}
-              onClick={() => onLanguageChange?.('en')}
-            >
-              English
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className={`${currentLanguage === 'fr' ? 'bg-primary text-white' : ''}`}
-              onClick={() => onLanguageChange?.('fr')}
-            >
-              Français
-            </Button>
-          </div>
-          */}
           <Button
             variant="ghost"
             size="icon"

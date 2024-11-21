@@ -18,24 +18,24 @@ export default function TradePage() {
   const [additionalData, setAdditionalData] = useState<Step5Data | null>(null)
   const [contactData, setContactData] = useState<Step6Data | null>(null)
 
-  const handleNext = (data: any) => {
+  const handleNext = (data: Step1Data | Step2Data | Step3Data | Step4Data | Step5Data | Step6Data) => {
     if (currentStep === 1) {
-      setVehicleData(data)
+      setVehicleData(data as Step1Data)
       setCurrentStep(2)
     } else if (currentStep === 2) {
-      setVehicleSpecs(data)
+      setVehicleSpecs(data as Step2Data)
       setCurrentStep(3)
     } else if (currentStep === 3) {
-      setFinancingData(data)
+      setFinancingData(data as Step3Data)
       setCurrentStep(4)
     } else if (currentStep === 4) {
-      setDamageData(data)
+      setDamageData(data as Step4Data)
       setCurrentStep(5)
     } else if (currentStep === 5) {
-      setAdditionalData(data)
+      setAdditionalData(data as Step5Data)
       setCurrentStep(6)
     } else if (currentStep === 6) {
-      setContactData(data)
+      setContactData(data as Step6Data)
       setCurrentStep(7)
     }
   }
@@ -49,7 +49,6 @@ export default function TradePage() {
             currentStep={1}
             totalSteps={6}
             onClose={() => console.log('Close clicked')}
-            onLanguageChange={(lang) => console.log('Language changed to:', lang)}
           />
         )}
         {currentStep === 2 && vehicleData && (

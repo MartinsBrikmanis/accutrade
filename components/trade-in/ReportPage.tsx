@@ -1,7 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import { Info, CreditCard, AlertCircle } from "lucide-react"
 import { Label } from "@/components/ui/label"
 import Image from "next/image"
 import { StepHeader } from "./StepHeader"
@@ -57,6 +55,17 @@ const INTERIOR_COLORS = [
   { id: "ceramic", label: "Ceramic", color: "#E5E4E2" },
   { id: "navy-pier", label: "Navy Pier", color: "#2B3C5B" },
 ]
+
+const BUTTON_TEXT = "Get My Free Equifax Credit Score"
+const BUTTON_SUBTEXT = "This will NOT impact your Credit"
+const CREDIT_SCORE_TITLE = "Let&apos;s Check Your Credit Score"
+const CREDIT_SCORE_DESCRIPTION = "It&apos;s quick, easy, and won&apos;t affect your credit score"
+const CREDIT_SNAPSHOT_TEXT = "Obtain your Free Equifax Credit snapshot to determine your eligibility to financing the vehicle you&apos;ve been eyeing"
+
+const MILEAGE_STATUS = {
+  BELOW_AVERAGE: "Below Average",
+  ABOVE_AVERAGE: "Above Average"
+}
 
 export function ReportPage({ 
   vehicleData, 
@@ -173,23 +182,28 @@ export function ReportPage({
             <Label className="text-[16px] block !mt-[24px] mb-2">Next Step</Label>
             <div className="bg-white rounded-lg p-6">
               <h3 className="text-[26px] font-bold mb-2 text-center">
-                Know What You Can Afford Before You Buy
+                {CREDIT_SCORE_TITLE}
               </h3>
+              <p className="text-[16px] text-muted-foreground mb-2">
+                {CREDIT_SCORE_DESCRIPTION}
+              </p>
               <p className="text-[16px] text-muted-foreground mb-6">
-                Obtain your Free Equifax Credit snapshot to determine your eligibility to financing the vehicle you've been eyeing
+                {CREDIT_SNAPSHOT_TEXT}
               </p>
               
               <Button className="w-full h-auto py-4 bg-[#4b69a0] hover:bg-[#4b69a0]/90 text-[16px]">
-                Get My Free Equifax Credit Score
+                {BUTTON_TEXT}
               </Button>
 
-              <Image 
-                src="/asset/button-sub-text-2.svg"
-                alt="This will NOT impact your Credit"
-                width={200}
-                height={20}
-                className="mx-auto mt-4"
-              />
+              <div className="relative w-[200px] h-[20px] mx-auto mt-4">
+                <Image 
+                  src="/asset/button-sub-text-2.svg"
+                  alt={BUTTON_SUBTEXT}
+                  fill
+                  style={{ objectFit: 'contain' }}
+                  priority
+                />
+              </div>
             </div>
           </div>
         </CardContent>
@@ -390,7 +404,7 @@ export function ReportPage({
                           ? "bg-green-100 text-green-800" 
                           : "bg-red-100 text-red-800"
                       )}>
-                        {vehicleInfo.vehicleDesirability ? "Below Average" : "Above Average"}
+                        {vehicleInfo.vehicleDesirability ? MILEAGE_STATUS.BELOW_AVERAGE : MILEAGE_STATUS.ABOVE_AVERAGE}
                       </span>
                     </div>
                   </div>

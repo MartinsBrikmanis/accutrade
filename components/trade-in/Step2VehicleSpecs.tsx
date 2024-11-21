@@ -2,9 +2,7 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ChevronLeft, Pencil } from "lucide-react"
 import { Step1Data } from "./Step1VehicleInfo"
 import { StepHeader } from "./StepHeader"
 import { cn } from "@/lib/utils"
@@ -42,11 +40,6 @@ const INTERIOR_COLORS = [
   { id: "space-gray", label: "Space Gray", color: "#4F4F4F" },
   { id: "ceramic", label: "Ceramic", color: "#E5E4E2" },
   { id: "navy-pier", label: "Navy Pier", color: "#2B3C5B" },
-]
-
-const ENGINE_OPTIONS = [
-  { id: "3.5l-ecoboost", label: "3.5L EcoBoost V6" },
-  { id: "3.0l-diesel", label: "3.0L V6 Turbo Diesel" },
 ]
 
 export function Step2VehicleSpecs({ onNext, initialData, vehicleInfo, currentStep, totalSteps, onBack }: Step2Props) {

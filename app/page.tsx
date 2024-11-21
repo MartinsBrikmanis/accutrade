@@ -10,7 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Separator } from '@/components/ui/separator'
 import {
   Card,
   CardContent,
@@ -30,7 +29,7 @@ interface VehicleData {
   trim: string
   tradeInValue: number
   marketValue: number
-  rawResponse: any
+  rawResponse: VinLookupResult[]
   gid?: string
 }
 
@@ -275,7 +274,6 @@ export default function TradeInPage() {
           <StepHeader 
             hideCounter={true}
             onClose={() => {/* handle close */}}
-            onLanguageChange={(lang) => {/* handle language change */}}
           />
           <Card>
             <CardHeader className="ml-[30px] mb-[30px]">

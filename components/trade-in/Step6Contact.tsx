@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ChevronLeft } from "lucide-react"
 import { StepHeader } from "./StepHeader"
 import { Step1Data } from "./Step1VehicleInfo"
 import { Step2Data } from "./Step2VehicleSpecs"
@@ -53,6 +52,10 @@ const INTERIOR_COLORS = [
   { id: "ceramic", label: "Ceramic", color: "#E5E4E2" },
   { id: "navy-pier", label: "Navy Pier", color: "#2B3C5B" },
 ]
+
+// Move text with apostrophes to constants and use HTML entities
+const FORM_TITLE = "Let&apos;s Get Your Trade-In Value"
+const FORM_DESCRIPTION = "It&apos;s important to ensure all fields are filled out correctly."
 
 export function Step6Contact({ 
   onNext, 
@@ -151,10 +154,10 @@ export function Step6Contact({
       />
       <CardHeader className="px-[30px] text-left">
         <CardTitle className="font-manrope text-[21px] font-extrabold text-black leading-normal">
-          Contact Information
+          {FORM_TITLE}
         </CardTitle>
         <p className="text-black text-[16px] font-normal leading-[120%]">
-          We'll send your estimate to your email
+          {FORM_DESCRIPTION}
         </p>
       </CardHeader>
       <CardContent className="px-[30px] py-6">

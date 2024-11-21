@@ -1,5 +1,3 @@
-const API_BASE_URL = 'http://api.accu-trade.com'
-
 export async function getVehicleByVin(vin: string) {
   try {
     // Validate VIN format (17 alphanumeric characters)
