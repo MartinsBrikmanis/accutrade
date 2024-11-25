@@ -219,33 +219,40 @@ export function Step1VehicleInfo({
           throw new Error('Please complete all required fields')
         }
 
-        // Make API calls
+        // Make parallel API calls for valuation
         const [gidResponse, mileageResponse] = await Promise.all([
           fetch(`/api/vehicle/gid/${selectedStyle.gid}`),
           fetch(`/api/vehicle/gid/${selectedStyle.gid}/mileage/${formData.mileage}`)
         ])
+
+        if (!gidResponse.ok || !mileageResponse.ok) {
+          throw new Error('Failed to fetch vehicle valuation data')
+        }
 
         const [gidData, mileageData] = await Promise.all([
           gidResponse.json(),
           mileageResponse.json()
         ])
 
-        // Create vehicle data
+        console.log('GID Data:', gidData)
+        console.log('Mileage Data:', mileageData)
+
+        // Create vehicle data with correct price data from API
         const vehicleData: Step1Data = {
           year: vinLookupResult.year,
           make: vinLookupResult.make,
           model: vinLookupResult.model,
           trim: selectedVinStyle,
           mileage: formData.mileage,
-          vehicleBasePrice: gidData.baseProjectedPrice || 0,
-          vehicleMarketValue: gidData.baseProjectedMarketPrice || 0,
+          vehicleBasePrice: gidData.retail || gidData.vehicleBasePrice || 0, // Update based on API response
+          vehicleMarketValue: gidData.projectedmarkett || gidData.vehicleMarketBasePrice || 0, // Update based on API response
           vehiclePriceAdjustment: mileageData.adjustment || 0,
-          vehicleDesirability: !mileageData.desirable,
+          vehicleDesirability: mileageData.desirable === false, // Invert the value as shown in the image
           rawResponse: gidData,
           gid: selectedStyle.gid
         }
 
-        console.log('Navigating with data:', vehicleData)
+        console.log('VIN flow - Vehicle data:', vehicleData)
         onNext(vehicleData)
 
       } else {
@@ -254,33 +261,40 @@ export function Step1VehicleInfo({
           throw new Error('Please complete all required fields')
         }
 
-        // Make API calls
+        // Make parallel API calls for valuation
         const [gidResponse, mileageResponse] = await Promise.all([
           fetch(`/api/vehicle/gid/${selectedGid}`),
           fetch(`/api/vehicle/gid/${selectedGid}/mileage/${formData.mileage}`)
         ])
+
+        if (!gidResponse.ok || !mileageResponse.ok) {
+          throw new Error('Failed to fetch vehicle valuation data')
+        }
 
         const [gidData, mileageData] = await Promise.all([
           gidResponse.json(),
           mileageResponse.json()
         ])
 
-        // Create vehicle data
+        console.log('GID Data:', gidData)
+        console.log('Mileage Data:', mileageData)
+
+        // Create vehicle data with correct price data from API
         const vehicleData: Step1Data = {
           year: selectedYear,
           make: selectedMake,
           model: selectedModel,
           trim: selectedTrim,
           mileage: formData.mileage,
-          vehicleBasePrice: gidData.baseProjectedPrice || 0,
-          vehicleMarketValue: gidData.baseProjectedMarketPrice || 0,
+          vehicleBasePrice: gidData.retail || gidData.vehicleBasePrice || 0, // Update based on API response
+          vehicleMarketValue: gidData.projectedmarkett || gidData.vehicleMarketBasePrice || 0, // Update based on API response
           vehiclePriceAdjustment: mileageData.adjustment || 0,
-          vehicleDesirability: !mileageData.desirable,
+          vehicleDesirability: mileageData.desirable === false, // Invert the value as shown in the image
           rawResponse: gidData,
           gid: selectedGid
         }
 
-        console.log('Navigating with data:', vehicleData)
+        console.log('Manual flow - Vehicle data:', vehicleData)
         onNext(vehicleData)
       }
     } catch (error) {
