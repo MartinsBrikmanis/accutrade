@@ -26,7 +26,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div 
         className={cn(
-          "min-w-[465px] min-h-[45px] bg-white rounded-[6px]",
+          "min-h-[45px] bg-white rounded-[6px]",
           wrapperClassName
         )}
       >

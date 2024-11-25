@@ -53,9 +53,9 @@ const INTERIOR_COLORS = [
   { id: "navy-pier", label: "Navy Pier", color: "#2B3C5B" },
 ]
 
-// Move text with apostrophes to constants and use HTML entities
-const FORM_TITLE = "Let&apos;s Get Your Trade-In Value"
-const FORM_DESCRIPTION = "It&apos;s important to ensure all fields are filled out correctly."
+// Move text with apostrophes to constants and use proper HTML entities
+const FORM_TITLE = "Let's Get Your Trade-In Value"
+const FORM_DESCRIPTION = "It's important to ensure all fields are filled out correctly."
 
 export function Step6Contact({ 
   onNext, 
@@ -162,7 +162,7 @@ export function Step6Contact({
       </CardHeader>
       <CardContent className="px-[30px] py-6">
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* First Name */}
             <div className="space-y-2">
               <Label htmlFor="firstName" className="text-[16px]">First Name</Label>
