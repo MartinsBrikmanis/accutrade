@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -17,6 +17,7 @@ interface Step1Props {
   currentStep?: number
   totalSteps?: number
   onBack?: () => void
+  hideCounter?: boolean
 }
 
 export interface Step1Data {
@@ -57,19 +58,27 @@ const formatCurrency = (amount: number) => {
   }).format(amount)
 }
 
+// Add this function near the top of the component
+const validateVehicleData = (data: Step1Data): boolean => {
+  if (!data.year || !data.make || !data.model || !data.trim || !data.mileage) {
+    console.error('Missing required vehicle data:', data)
+    return false
+  }
+  return true
+}
+
 export function Step1VehicleInfo({ 
   onNext, 
   initialData, 
   onClose,
   currentStep,
   totalSteps,
-  onBack
+  onBack,
+  hideCounter
 }: Step1Props) {
-  // Input method state
+  // State declarations first
   const [inputMethod, setInputMethod] = useState<'vin' | 'manual'>('vin')
   const [loading, setLoading] = useState(false)
-
-  // VIN-related states
   const [vin, setVin] = useState('')
   const [vinLookupResult, setVinLookupResult] = useState<VinLookupResult | null>(null)
   const [vinStyles, setVinStyles] = useState<Array<{
@@ -109,6 +118,296 @@ export function Step1VehicleInfo({
     vehicleDesirability: false,
     rawResponse: null
   })
+
+  // Near the top of the component, add this check
+  useEffect(() => {
+    if (!onNext) {
+      console.error('onNext callback is not defined')
+    }
+  }, [onNext])
+
+  // Move helper functions inside the component
+  const handleVinLookup = async () => {
+    try {
+      // Log the VIN being looked up
+      console.log('Looking up VIN:', vin)
+
+      // Validate VIN format first
+      if (!/^[A-HJ-NPR-Z0-9]{17}$/i.test(vin)) {
+        throw new Error('Invalid VIN format')
+      }
+
+      const response = await getVehicleByVin(vin)
+      console.log('Raw VIN lookup response:', response)
+
+      // Check if response is an array and has content
+      if (!Array.isArray(response) || response.length === 0) {
+        throw new Error('No vehicle data found for this VIN')
+      }
+
+      // Get the first result
+      const vehicleData = response[0]
+      console.log('Vehicle data from response:', vehicleData)
+
+      // Validate required fields
+      if (!vehicleData.year || !vehicleData.make || !vehicleData.model) {
+        throw new Error('Incomplete vehicle data received')
+      }
+
+      // Set the VIN lookup result
+      setVinLookupResult({
+        year: vehicleData.year,
+        make: vehicleData.make,
+        model: vehicleData.model,
+        gid: vehicleData.gid || '',
+        extendedGid: vehicleData.extendedGid || '',
+        trim: vehicleData.trim || '',
+        basePrice: vehicleData.basePrice || 0,
+        marketValue: vehicleData.marketValue || 0,
+        priceAdjustment: vehicleData.priceAdjustment || 0,
+        desirability: vehicleData.desirability || false
+      })
+
+      // Extract and set available styles
+      const styles = response.map(item => ({
+        style: item.trim || item.style || `${item.year} ${item.make} ${item.model}`,
+        gid: item.gid || ''
+      })).filter(style => style.style && style.gid)
+
+      if (styles.length === 0) {
+        throw new Error('No trim levels found for this vehicle')
+      }
+
+      console.log('Available styles:', styles)
+      setVinStyles(styles)
+
+      // Show success message
+      toast.success('Vehicle found! Please select a trim level.')
+
+    } catch (error) {
+      console.error('VIN lookup error:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to lookup VIN')
+      throw error
+    }
+  }
+
+  const safeOnNext = (data: Step1Data) => {
+    try {
+      console.log('Attempting to navigate with data:', data)
+      onNext(data)
+    } catch (error) {
+      console.error('Error in onNext callback:', error)
+      toast.error('Failed to proceed to next step')
+    }
+  }
+
+  // Update handleSubmit function
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      if (inputMethod === 'vin') {
+        if (!vinLookupResult) {
+          await handleVinLookup()
+          setLoading(false)
+          return
+        }
+
+        const selectedStyle = vinStyles.find(s => s.style === selectedVinStyle)
+        if (!selectedStyle?.gid || !formData.mileage) {
+          throw new Error('Please complete all required fields')
+        }
+
+        // Make API calls
+        const [gidResponse, mileageResponse] = await Promise.all([
+          fetch(`/api/vehicle/gid/${selectedStyle.gid}`),
+          fetch(`/api/vehicle/gid/${selectedStyle.gid}/mileage/${formData.mileage}`)
+        ])
+
+        const [gidData, mileageData] = await Promise.all([
+          gidResponse.json(),
+          mileageResponse.json()
+        ])
+
+        // Create vehicle data
+        const vehicleData: Step1Data = {
+          year: vinLookupResult.year,
+          make: vinLookupResult.make,
+          model: vinLookupResult.model,
+          trim: selectedVinStyle,
+          mileage: formData.mileage,
+          vehicleBasePrice: gidData.baseProjectedPrice || 0,
+          vehicleMarketValue: gidData.baseProjectedMarketPrice || 0,
+          vehiclePriceAdjustment: mileageData.adjustment || 0,
+          vehicleDesirability: !mileageData.desirable,
+          rawResponse: gidData,
+          gid: selectedStyle.gid
+        }
+
+        console.log('Navigating with data:', vehicleData)
+        onNext(vehicleData)
+
+      } else {
+        // Manual flow
+        if (!selectedGid || !formData.mileage) {
+          throw new Error('Please complete all required fields')
+        }
+
+        // Make API calls
+        const [gidResponse, mileageResponse] = await Promise.all([
+          fetch(`/api/vehicle/gid/${selectedGid}`),
+          fetch(`/api/vehicle/gid/${selectedGid}/mileage/${formData.mileage}`)
+        ])
+
+        const [gidData, mileageData] = await Promise.all([
+          gidResponse.json(),
+          mileageResponse.json()
+        ])
+
+        // Create vehicle data
+        const vehicleData: Step1Data = {
+          year: selectedYear,
+          make: selectedMake,
+          model: selectedModel,
+          trim: selectedTrim,
+          mileage: formData.mileage,
+          vehicleBasePrice: gidData.baseProjectedPrice || 0,
+          vehicleMarketValue: gidData.baseProjectedMarketPrice || 0,
+          vehiclePriceAdjustment: mileageData.adjustment || 0,
+          vehicleDesirability: !mileageData.desirable,
+          rawResponse: gidData,
+          gid: selectedGid
+        }
+
+        console.log('Navigating with data:', vehicleData)
+        onNext(vehicleData)
+      }
+    } catch (error) {
+      console.error('Error submitting vehicle data:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to submit vehicle data')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Add handler for style selection
+  const handleVinStyleSelect = (value: string) => {
+    setSelectedVinStyle(value)
+    // Update form data when style is selected
+    if (vinLookupResult) {
+      setFormData(prev => ({
+        ...prev,
+        year: vinLookupResult.year,
+        make: vinLookupResult.make,
+        model: vinLookupResult.model,
+        trim: value
+      }))
+    }
+  }
+
+  // Add mileage adjustment display component
+  const MileageAdjustmentDisplay = (): JSX.Element | null => {
+    if (!formData.vehiclePriceAdjustment) {
+      return null
+    }
+
+    return (
+      <div className="bg-muted p-4 rounded-lg">
+        <h3 className="text-lg font-semibold mb-2">Mileage Impact</h3>
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <span>Value Adjustment:</span>
+            <span className={cn(
+              "font-semibold",
+              formData.vehiclePriceAdjustment > 0 ? "text-green-600" : "text-red-600"
+            )}>
+              {formatCurrency(formData.vehiclePriceAdjustment)}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span>Mileage Status:</span>
+            <span className={cn(
+              "text-sm px-2 py-1 rounded",
+              formData.vehicleDesirability 
+                ? "bg-green-100 text-green-800" 
+                : "bg-red-100 text-red-800"
+            )}>
+              {formData.vehicleDesirability ? "Below Average" : "Above Average"}
+            </span>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Fix the isButtonDisabled function
+  const isButtonDisabled = () => {
+    if (loading) return true
+    
+    if (inputMethod === 'vin') {
+      if (!vinLookupResult) {
+        return vin.length !== 17 // Only enable if VIN is 17 characters
+      }
+      return !selectedVinStyle || !formData.mileage // Enable if style and mileage are selected
+    }
+    
+    // For manual selection
+    return !selectedYear || !selectedMake || !selectedModel || !selectedTrim || !formData.mileage
+  }
+
+  // Add helper function to check if trim is selected
+  const isTrimSelected = () => {
+    if (inputMethod === 'vin') {
+      return !!selectedVinStyle
+    }
+    return !!selectedTrim
+  }
+
+  // Add debug logging to the VIN input handler
+  const handleVinInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVin = e.target.value.toUpperCase()
+    console.log('VIN input changed:', newVin)
+    setVin(newVin)
+  }
+
+  // Add near the top of the component
+  useEffect(() => {
+    console.log('Current VIN state:', vin)
+    console.log('VIN lookup result:', vinLookupResult)
+    console.log('Available styles:', vinStyles)
+  }, [vin, vinLookupResult, vinStyles])
+
+  // Add these handler functions inside the Step1VehicleInfo component, after the state declarations
+
+  // Handle year selection
+  const handleYearSelect = async (year: string) => {
+    setSelectedYear(year)
+    setSelectedMake('')
+    setSelectedModel('')
+    setSelectedTrim('')
+    setSelectedGid('')
+    
+    try {
+      const response = await fetch(`/api/vehicle/makes?year=${year}`)
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch makes')
+      }
+      
+      const data = await response.json()
+      if (Array.isArray(data)) {
+        setAvailableMakes(data)
+      } else {
+        console.error('Unexpected makes data format:', data)
+        setAvailableMakes([])
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      toast.error('Failed to fetch makes')
+      setAvailableMakes([])
+    }
+  }
 
   // Handle make selection
   const handleMakeSelect = async (make: string) => {
@@ -174,266 +473,24 @@ export function Step1VehicleInfo({
     if (selectedTrimData) {
       setSelectedTrim(selectedTrimData.trim)
       setSelectedGid(selectedTrimData.gid)
-    }
-  }
-
-  // Handle year selection
-  const handleYearSelect = async (year: string) => {
-    setSelectedYear(year)
-    setSelectedMake('')
-    setSelectedModel('')
-    setSelectedTrim('')
-    setSelectedGid('')
-    
-    try {
-      const response = await fetch(`/api/vehicle/makes?year=${year}`)
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch makes')
-      }
-      
-      const data = await response.json()
-      if (Array.isArray(data)) {
-        setAvailableMakes(data)
-      } else {
-        console.error('Unexpected makes data format:', data)
-        setAvailableMakes([])
-      }
-    } catch (error) {
-      console.error('Error:', error)
-      toast.error('Failed to fetch makes')
-      setAvailableMakes([])
+      // Update form data when trim is selected
+      setFormData(prev => ({
+        ...prev,
+        year: selectedYear,
+        make: selectedMake,
+        model: selectedModel,
+        trim: selectedTrimData.trim,
+        gid: selectedTrimData.gid
+      }))
     }
   }
-
-  // Add the missing isTrimSelected function
-  const isTrimSelected = () => {
-    return (inputMethod === 'vin' && selectedVinStyle) || 
-           (inputMethod === 'manual' && selectedTrim);
-  }
-
-  // Handle form submission
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-
-    try {
-      if (inputMethod === 'vin') {
-        if (!vinLookupResult) {
-          // First submission - VIN lookup
-          if (!/^[A-HJ-NPR-Z0-9]{17}$/i.test(vin)) {
-            toast.error('Please enter a valid 17-character VIN')
-            return
-          }
-
-          const data = await getVehicleByVin(vin)
-          
-          if (!data || !Array.isArray(data)) {
-            throw new Error('Invalid response format from API')
-          }
-
-          if (data.length === 0) {
-            toast.error('No vehicle found for this VIN')
-            return
-          }
-
-          // Set the VIN lookup result and available styles
-          setVinLookupResult(data[0])
-          const styles = data.map(item => ({
-            style: item.style || item.trim,
-            gid: item.gid
-          }))
-          setVinStyles(styles)
-        } else {
-          // Second submission - Get vehicle value using GID
-          const selectedStyle = vinStyles.find(s => s.style === selectedVinStyle)
-          if (!selectedStyle?.gid) {
-            toast.error('Please select a trim level')
-            return
-          }
-
-          if (!formData.mileage) {
-            toast.error('Please enter vehicle mileage')
-            return
-          }
-
-          try {
-            // Make parallel API calls
-            const [gidResponse, mileageResponse] = await Promise.all([
-              fetch(`/api/vehicle/gid/${selectedStyle.gid}`),
-              fetch(`/api/vehicle/gid/${selectedStyle.gid}/mileage/${formData.mileage}`)
-            ])
-
-            if (!gidResponse.ok || !mileageResponse.ok) {
-              throw new Error('Failed to fetch vehicle data')
-            }
-
-            const [gidData, mileageData] = await Promise.all([
-              gidResponse.json(),
-              mileageResponse.json()
-            ])
-
-            // Add logging to debug the response
-            console.log('GID Response Data:', gidData)
-
-            // Update the field mappings to match the API response structure
-            onNext({
-              year: vinLookupResult.year,
-              make: vinLookupResult.make,
-              model: vinLookupResult.model,
-              trim: selectedVinStyle,
-              mileage: formData.mileage,
-              vehicleBasePrice: gidData.trade || 0,
-              vehicleMarketValue: gidData.retail || 0,
-              vehiclePriceAdjustment: mileageData.adjustment || 0,
-              vehicleDesirability: mileageData.desirable || false,
-              rawResponse: gidData,
-              gid: selectedStyle.gid
-            })
-          } catch (error) {
-            console.error('Error:', error)
-            toast.error('Failed to fetch vehicle value')
-          }
-        }
-      } else {
-        // Manual selection - Get vehicle value using GID
-        if (!selectedGid) {
-          toast.error('Please select all vehicle details')
-          return
-        }
-
-        if (!formData.mileage) {
-          toast.error('Please enter vehicle mileage')
-          return
-        }
-
-        try {
-          // Make parallel API calls
-          const [gidResponse, mileageResponse] = await Promise.all([
-            fetch(`/api/vehicle/gid/${selectedGid}`),
-            fetch(`/api/vehicle/gid/${selectedGid}/mileage/${formData.mileage}`)
-          ])
-
-          if (!gidResponse.ok || !mileageResponse.ok) {
-            throw new Error('Failed to fetch vehicle data')
-          }
-
-          const [gidData, mileageData] = await Promise.all([
-            gidResponse.json(),
-            mileageResponse.json()
-          ])
-
-          // Add logging to debug the response
-          console.log('GID Response Data:', gidData)
-
-          // Update the field mappings to match the API response structure
-          onNext({
-            year: selectedYear,
-            make: selectedMake,
-            model: selectedModel,
-            trim: selectedTrim,
-            mileage: formData.mileage,
-            vehicleBasePrice: gidData.trade || 0,
-            vehicleMarketValue: gidData.retail || 0,
-            vehiclePriceAdjustment: mileageData.adjustment || 0,
-            vehicleDesirability: mileageData.desirable || false,
-            rawResponse: gidData,
-            gid: selectedGid
-          })
-        } catch (error) {
-          console.error('Error:', error)
-          toast.error('Failed to fetch vehicle value')
-        }
-      }
-    } catch (error) {
-      console.error('Error:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to fetch vehicle data')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Add handler for style selection
-  const handleVinStyleSelect = async (style: string) => {
-    setSelectedVinStyle(style)
-    const selectedStyle = vinStyles.find(s => s.style === style)
-    
-    if (selectedStyle && vinLookupResult) {
-      setFormData({
-        year: vinLookupResult.year,
-        make: vinLookupResult.make,
-        model: vinLookupResult.model,
-        trim: style,
-        mileage: formData.mileage,
-        vehicleBasePrice: vinLookupResult.basePrice || 0,
-        vehicleMarketValue: vinLookupResult.marketValue || 0,
-        vehiclePriceAdjustment: vinLookupResult.priceAdjustment || 0,
-        vehicleDesirability: vinLookupResult.desirability || false,
-        rawResponse: vinLookupResult,
-        gid: selectedStyle.gid
-      })
-    }
-  }
-
-  // Add mileage adjustment display component
-  const MileageAdjustmentDisplay = (): JSX.Element | null => {
-    if (!formData.vehiclePriceAdjustment) {
-      return null
-    }
-
-    return (
-      <div className="bg-muted p-4 rounded-lg">
-        <h3 className="text-lg font-semibold mb-2">Mileage Impact</h3>
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <span>Value Adjustment:</span>
-            <span className={cn(
-              "font-semibold",
-              formData.vehiclePriceAdjustment > 0 ? "text-green-600" : "text-red-600"
-            )}>
-              {formatCurrency(formData.vehiclePriceAdjustment)}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span>Mileage Status:</span>
-            <span className={cn(
-              "text-sm px-2 py-1 rounded",
-              formData.vehicleDesirability 
-                ? "bg-green-100 text-green-800" 
-                : "bg-red-100 text-red-800"
-            )}>
-              {formData.vehicleDesirability ? "Below Average" : "Above Average"}
-            </span>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // Add this function to determine if the button should be disabled
-  const isButtonDisabled = () => {
-    if (loading) return true;
-    
-    if (inputMethod === 'vin') {
-      // For VIN input, only disable if:
-      // 1. No VIN entered and it's in "Find A Vehicle" state
-      // 2. Has VIN lookup result but no style selected and mileage for "Get Vehicle Value" state
-      if (!vinLookupResult) {
-        return vin.length === 0; // Enable if VIN is entered
-      } else {
-        return !selectedVinStyle || !formData.mileage; // Enable if style and mileage are selected
-      }
-    } else {
-      // For manual selection, disable if any required field is missing
-      return !selectedYear || !selectedMake || !selectedModel || !selectedTrim || !formData.mileage;
-    }
-  };
 
   return (
     <Card className="w-full mx-auto">
       <StepHeader 
-        currentStep={currentStep}
-        totalSteps={totalSteps}
+        currentStep={hideCounter ? undefined : currentStep}
+        totalSteps={hideCounter ? undefined : totalSteps}
         onBack={onBack}
         onClose={onClose}
       />
@@ -466,10 +523,14 @@ export function Step1VehicleInfo({
             {inputMethod === 'vin' && (
               <div className="space-y-2">
                 <Input
+                  id="vin-input"
+                  name="vin-input"
                   placeholder="Enter your VIN"
                   value={vin}
-                  onChange={(e) => setVin(e.target.value)}
+                  onChange={handleVinInput}
                   maxLength={17}
+                  className="uppercase"
+                  aria-label="Vehicle Identification Number"
                 />
                 <p className="text-sm text-muted-foreground">
                   Your VIN is a 17-character alphanumeric code.

@@ -43,6 +43,11 @@ const INTERIOR_COLORS = [
 ]
 
 export function Step2VehicleSpecs({ onNext, initialData, vehicleInfo, currentStep, totalSteps, onBack }: Step2Props) {
+  if (!vehicleInfo) {
+    console.error('Vehicle info is required')
+    return null
+  }
+
   const [formData, setFormData] = useState<Step2Data>(initialData || {
     exteriorColor: "agate-black",
     interiorColor: "sandstone",
